@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+cd /Users/omerarzi/projects/japanese-agent && npx ts-node src/ask.ts "$@"

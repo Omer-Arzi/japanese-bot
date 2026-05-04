@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Generated / compiled output
+dist/
+output/
+
+# TypeScript compiled files that may land in src/
+src/**/*.js
+src/**/*.js.map
+src/**/*.d.ts
+src/**/*.d.ts.map
+
+# Data — extracted text, embeddings, chunks, exercise bank
+data/
+
+# Source PDFs and learning materials (large files, may be copyrighted)
+docs/
+
+# macOS
+.DS_Store
