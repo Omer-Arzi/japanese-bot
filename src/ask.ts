@@ -68,12 +68,53 @@ const MIX: Record<QuestionMode, Record<string, number>> = {
 const COMMAND_LINE_RE = /^\s*(ask-sensei|sensei-file|ts-node|npx|node)\b.*/i;
 const QUOTED_COMMAND_RE = /`[^`]*ask-sensei[^`]*`/gi;
 
+// Arabic U+0600–U+06FF, Cyrillic U+0400–U+04FF, Korean Hangul U+AC00–U+D7AF + Jamo
+const ARABIC_RE = /[؀-ۿ]/g;
+const CYRILLIC_RE = /[Ѐ-ӿ]/g;
+const KOREAN_RE = /[가-힯ᄀ-ᇿ㄰-㆏]/g;
+
+// Remove duplicated adjacent Hebrew words: "נושא (נושא)" → "נושא"
+const HEBREW_WORD_RE = /[א-תיִ-פֿ]+/;
+const DUPLICATE_PARENS_RE = new RegExp(
+  `(${HEBREW_WORD_RE.source})\\s*\\(\\1\\)`,
+  "gu",
+);
+
+// Detect Hebrew and Japanese characters
+const HAS_HEBREW_RE = /[א-ת]/;
+const HAS_JAPANESE_RE = /[぀-ヿ㐀-䶿一-鿿]/;
+
+// A Latin token looks like Japanese romaji if it follows CV syllable structure.
+// Rejects patterns like "uur", "burg" that have non-Japanese consonant sequences.
+const ROMAJI_RE = /^(?:(?:sh|ch|ts|[kgsztnhbpmrywdjfv])?[aeiou]{1,2})+n?$/i;
+
+// On pure Hebrew text lines (no Japanese chars, no "—" separator),
+// remove any Latin word of 3+ characters that doesn't look like romaji.
+function stripStrayLatin(line: string): string {
+  if (!HAS_HEBREW_RE.test(line) || HAS_JAPANESE_RE.test(line)) return line;
+  if (line.includes("—") || line.includes("—")) return line;
+  return line
+    .replace(/\b[a-zA-Z]{3,}\b/g, (word) => (ROMAJI_RE.test(word) ? word : ""))
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 function cleanOutput(text: string): string {
   return text
     .split("\n")
+    // Remove CLI command lines
     .filter((line) => !COMMAND_LINE_RE.test(line))
+    // Strip Arabic and Cyrillic characters from each line
+    .map((line) => line.replace(ARABIC_RE, "").replace(CYRILLIC_RE, "").replace(KOREAN_RE, ""))
+    // Strip stray non-romaji Latin words from Hebrew text lines
+    .map(stripStrayLatin)
+    // Remove lines that became empty or whitespace-only after stripping
+    .filter((line) => line.trim().length > 0)
     .join("\n")
     .replace(QUOTED_COMMAND_RE, "")
+    // Remove duplicated Hebrew word in parentheses: "נושא (נושא)" → "נושא"
+    .replace(DUPLICATE_PARENS_RE, "$1")
+    // Collapse excess blank lines
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
@@ -98,6 +139,64 @@ Critical grammar rules — never violate these:
 - Never claim が marks the object. Never claim を marks the subject.
 - Do not mix Arabic script or unrelated writing systems into explanations.
 - For Japanese examples, use: Japanese (romaji) — translation
+`;
+
+const HEBREW_BASE_RULES = `
+כללי שפה עברית — חובה לפעול לפיהם:
+- כתוב עברית תקנית, שוטפת וטבעית. אל תתרגם מילולית מאנגלית.
+- ההסבר חייב להיות עברית בלבד. אסור לערבב כתב ערבי, קירילי, או אנגלית פנימה.
+- אל תערבב אותיות עבריות עם רומאג'י בתוך אותה מילה.
+  שגוי: "אני watashi מדבר"
+  נכון: "אני (watashi) מדבר"
+- אסור לכתוב מילה ואחריה אותה מילה בסוגריים: שגוי: "נושא (נושא)". נכון: "נושא".
+- דוגמאות ביפנית: כתוב את הדוגמה ביפנית / רומאג'י, ואחריה תרגום עברי.
+  פורמט: יפנית (romaji) — תרגום עברי
+- אל תשתמש באנגלית אלא אם אין מונח עברי מקובל.
+
+עברית טבעית — דוגמאות:
+  שגוי: "מיקום (למשל)"
+  נכון: "המקום שבו מתבצעת הפעולה"
+
+  שגוי: "object ישיר"
+  נכון: "מושא ישיר"
+
+  שגוי: "particle של נושא"
+  נכון: "חלקיק נושא"
+
+  שגוי: "ב פעולה" (עם רווח)
+  נכון: "בפעולה" (ללא רווח — ב' היא קידומת דבוקה)
+
+- אל תשתמש במילת-כותרת בקוריאנית (כמו 예시). השתמש רק בעברית: "דוגמאות", "הסבר", "סיכום".
+
+תרגומים נכונים — חובה להשתמש בהם:
+  東京 / Toukyou → טוקיו (לא "טאיקו")
+  会議 / kaigi → פגישה (לא "meeting")
+  好き / suki → אוהב / חובב (לא "Thing you like")
+  学校 / gakkou → בית ספר
+  電車 / densha → רכבת
+  ありがとう / arigatou → תודה
+  すみません / sumimasen → סליחה / רגע בבקשה
+
+כללי דקדוק יפני — אסור לטעות:
+- は = מסמן נושא השיח. מבוטא "wa" כחלקיק.
+- が = נושא דקדוקי / הדגשה / קיום.
+  עם すき (suki — לאהוב / לחבב): הדבר האהוב מסומן ב-が, לא ב-を.
+  הסיבה: すき הוא כמו שם תואר ביפנית, לא פועל. לכן הדבר האהוב הוא ה"נושא" שעליו מדברים.
+  דוגמה: 猫が好きです (neko ga suki desu) — "אני אוהב חתולים"
+- を = מושא ישיר (של פועל פעולה).
+- に = יעד, זמן, מיקום סטטי (איפה משהו נמצא), מושא עקיף.
+- で = המקום שבו מתבצעת פעולה, או האמצעי שבו משתמשים.
+  הבחנה חשובה — תמיד הסבר עם זוג דוגמאות מנוגדות:
+    東京にいます (toukyou ni imasu) — "אני נמצא בטוקיו" [מיקום סטטי — に]
+    東京で働きます (toukyou de hatarakimasu) — "אני עובד בטוקיו" [מקום ביצוע פעולה — で]
+- צורת て היא צורת פועל — לא חלקיק.
+- אל תטען ש-が מסמן מושא. אל תטען ש-を מסמן נושא.
+
+נכונות פעלים — דוגמאות נכונות:
+  hatarakimasu (לעבוד) — לא "atsukite"
+  kakimasu (לכתוב) — לא "kaku masu"
+  tabemasu (לאכול) — לא "tabe masu"
+  ikimasu (ללכת) — לא "iku masu"
 `;
 
 // ─── Detection functions ──────────────────────────────────────────────────────
@@ -178,22 +277,20 @@ function buildSystemPrompt(
     ? "You are a Japanese teacher. Answer in Hebrew."
     : "You are a Japanese teacher. Answer in English.";
 
-  const base = `${OUTPUT_RULES}${GRAMMAR_ACCURACY_RULES}`;
+  const base     = `${OUTPUT_RULES}${GRAMMAR_ACCURACY_RULES}`;
+  const hebrewBase = `${OUTPUT_RULES}${HEBREW_BASE_RULES}`;
 
   if (intent === "explanation") {
     if (language === "hebrew") {
       return `${lang}
-${base}
-אתה מורה דקדוק יפני ידידותי למתחילים. כתוב בעברית תקנית ושוטפת.
+${hebrewBase}
+אתה מורה דקדוק יפני ידידותי למתחילים.
 
 חוקים:
-- עברית בלבד לטקסט ההסבר. יפנית ורומאג'י מותרים רק בדוגמאות.
 - אל תפיק רשימות אוצר מילים אלא אם נשאלת במפורש.
 - ענה רק על השאלה שנשאלה.
-
-שימוש בידע:
 - אם ההקשר מספק מידע רלוונטי — השתמש בו.
-- עבור נושאי דקדוק בסיסיים (חלקיקים, צורות פועל, מבנה משפט) — תמיד תן הסבר מלא מידיעתך, גם אם ההקשר חלקי.
+- עבור נושאי דקדוק בסיסיים — תמיד תן הסבר מלא מידיעתך, גם אם ההקשר חלקי.
 - אין לכתוב "החומר אינו כולל..." — הסבר את הנושא ישירות.
 
 נושאים שמותר תמיד להסביר (גם ללא הקשר):
@@ -203,16 +300,13 @@ ${base}
 
 ציין את סוג הנושא: חלקיק / צורת פועל / תבנית משפט / אחר.
 
-פורמט דוגמאות:
-  יפנית (romaji) — תרגום לעברית
-
 מבנה התשובה:
-  1. פסקת הסבר קצרה
-  2. 2–3 דוגמאות
-  3. משפט סיכום
+  1. הסבר פשוט וברור
+  2. 2–3 דוגמאות בפורמט: יפנית (romaji) — תרגום
+  3. סיכום קצר
 
-- השתמש במילה "חלקיק" במקום "particle".
-- שפה טבעית ופעילה: "החלקיק מסמן..." ולא "מסומן על ידי".`;
+שפה טבעית ופעילה: "החלקיק מסמן..." ולא "מסומן על ידי".
+השתמש במילה "חלקיק" במקום "particle".`;
     }
     return `${lang}
 ${base}
@@ -242,16 +336,17 @@ Structure:
   if (intent === "analysis") {
     if (language === "hebrew") {
       return `${lang}
-${base}
+${hebrewBase}
 אתה מנתח משפטים יפניים למתחילים.
 
 נתח את המשפט שהמשתמש נותן.
 
 פורמט הפלט:
-  1. משפט
-  2. פירוק: מילה / ביטוי → תפקיד דקדוקי
-  3. תרגום
-  4. הסבר קצר
+  משפט: ...
+  פירוק:
+  - מילה / ביטוי → תפקיד דקדוקי
+  תרגום: ...
+  הסבר קצר: ...
 
 שמור על פשטות ודיוק. אל תשתמש במונחים מתקדמים.`;
     }
@@ -273,13 +368,14 @@ Keep it simple and accurate. Avoid advanced terminology.`;
   if (intent === "correction") {
     if (language === "hebrew") {
       return `${lang}
-${base}
+${hebrewBase}
 אתה בודק דקדוק יפני.
 
 בהינתן משפט יפני (ברומאג'י, הירגנה, קטקנה או מעורב):
-  1. אמור אם המשפט נכון או לא נכון.
-  2. אם לא נכון — תן גרסה מתוקנת, בטוחה ופשוטה.
+  1. אמור אם המשפט תקין או לא תקין.
+  2. אם לא תקין — תן גרסה מתוקנת, בטוחה ופשוטה.
   3. הסבר את התיקון בקצרה.
+  4. אם המשפט מובן אך לא טבעי — סמן "כמעט תקין".
 
 כללים:
 - תקן חלקיקים: は, が, を, に, で
@@ -290,8 +386,8 @@ ${base}
 - השתמש בהקשר שסופק כתמיכה אם רלוונטי, אבל אל תסרב לתקן בגלל חוסר בהקשר
 
 פורמט פלט:
-  סטטוס: נכון / לא נכון / נכון ברובו
-  מתוקן: ...
+  סטטוס: תקין / לא תקין / כמעט תקין
+  תיקון: ...
   הסבר: ...`;
     }
     return `${lang}
@@ -354,9 +450,8 @@ If the context is incomplete, still provide a useful plan based on what is avail
   // General Q&A
   if (language === "hebrew") {
     return `${lang}
-${base}
+${hebrewBase}
 אתה מורה יפנית ידידותי. ענה על השאלה בעברית בצורה ברורה ומועילה.
-- עברית בלבד לטקסט. יפנית ורומאג'י מותרים בדוגמאות בלבד.
 - אם ההקשר מספק מידע — השתמש בו. אחרת, ענה מידיעתך כמורה.`;
   }
   return `${lang}
