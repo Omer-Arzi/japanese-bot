@@ -132,7 +132,12 @@ const GRAMMAR_ACCURACY_RULES = `
 Critical grammar rules — never violate these:
 - は marks the TOPIC (pronounced "wa" as a particle). NOT the subject in the grammatical sense.
 - が marks the SUBJECT, or focus, or the liked thing with すき/suki/嫌い.
-- を marks the DIRECT OBJECT.
+- を marks the DIRECT OBJECT — the whole object, even when it is a list.
+- と connects nouns into a list meaning "and". It does NOT mark any object by itself.
+  When と is used to list nouns before を, を marks the ENTIRE list as the direct object.
+  CORRECT: "ラーメンとぎょうざを食べます (ra-men to gyouza wo tabemasu) — I eat ramen and gyoza"
+  NEVER say: "を marks the first object" or "を marks only the noun before it"
+  ALWAYS say: "を marks the whole list as the direct object"
 - に marks direction, destination, time, or indirect object.
 - で marks location of action or means.
 - て-form is a VERB FORM, not a particle.
@@ -183,7 +188,12 @@ const HEBREW_BASE_RULES = `
   עם すき (suki — לאהוב / לחבב): הדבר האהוב מסומן ב-が, לא ב-を.
   הסיבה: すき הוא כמו שם תואר ביפנית, לא פועל. לכן הדבר האהוב הוא ה"נושא" שעליו מדברים.
   דוגמה: 猫が好きです (neko ga suki desu) — "אני אוהב חתולים"
-- を = מושא ישיר (של פועל פעולה).
+- を = מושא ישיר — מסמן את כל המושא, גם כשהוא רשימה.
+  כשמשתמשים ב-と לחיבור שמות עצם ואז ב-を, החלקיק を מסמן את כל הרשימה יחד כמושא.
+  נכון: ラーメンとぎょうざを食べます (ra-men to gyouza wo tabemasu) — "אני אוכל ראמן וגיוזה"
+  אסור לומר: "を מסמן את המושא הראשון" — כי שניהם המושא.
+  יש לומר: "を מסמן את כל הרשימה כמושא ישיר"
+- と = מחבר שמות עצם לרשימה עם משמעות "ו-". אינו מסמן מושא בעצמו.
 - に = יעד, זמן, מיקום סטטי (איפה משהו נמצא), מושא עקיף.
 - で = המקום שבו מתבצעת פעולה, או האמצעי שבו משתמשים.
   הבחנה חשובה — תמיד הסבר עם זוג דוגמאות מנוגדות:

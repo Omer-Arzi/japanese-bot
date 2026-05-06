@@ -19,3 +19,10 @@ docs/
 
 # macOS
 .DS_Store
+
+# Tauri Rust build artifacts
+src-tauri/target/
+
+# UI build
+ui/node_modules/
+ui/dist/
