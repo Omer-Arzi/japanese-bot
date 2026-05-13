@@ -16,8 +16,8 @@ fn extract_answer(stdout: &str) -> String {
     }
 }
 
-fn extract_file_path(stderr: &str) -> Option<String> {
-    stderr
+fn extract_file_path(stdout: &str) -> Option<String> {
+    stdout
         .lines()
         .find(|line| line.contains("output/") && line.contains(".md"))
         .and_then(|line| {
@@ -71,9 +71,15 @@ mod commands {
             return Err(format!("sensei-file failed: {msg}"));
         }
 
+        let file_path = extract_file_path(&stdout)
+            .ok_or_else(|| format!("sensei-file did not report an output path.\nstdout: {stdout}\nstderr: {stderr}"))?;
+
+        let content = std::fs::read_to_string(&file_path)
+            .map_err(|e| format!("Failed to read output file {file_path}: {e}"))?;
+
         Ok(FileGenResult {
-            output: stdout,
-            file_path: extract_file_path(&stderr),
+            output: content,
+            file_path: Some(file_path),
         })
     }
 }

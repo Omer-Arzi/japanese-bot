@@ -5,9 +5,19 @@ interface Props {
   message: Message;
 }
 
+const HEBREW_RE = /[א-ת]/;
+
+// If text contains any Hebrew, treat the block as RTL.
+// The browser bidi algorithm then handles inline LTR segments
+// (romaji, English) correctly within the RTL flow.
+function dir(text: string): "rtl" | "ltr" {
+  return HEBREW_RE.test(text) ? "rtl" : "ltr";
+}
+
 export default function MessageBubble({ message }: Props) {
   const isUser = message.role === "user";
   const isError = message.role === "error";
+  const textDir = dir(message.content);
 
   return (
     <div className={`flex mb-4 ${isUser ? "justify-end" : "justify-start"}`}>
@@ -27,9 +37,14 @@ export default function MessageBubble({ message }: Props) {
         }`}
       >
         {isUser ? (
-          <p className="whitespace-pre-wrap">{message.content}</p>
+          <p className="whitespace-pre-wrap" dir={textDir}>
+            {message.content}
+          </p>
         ) : (
-          <div className="prose prose-invert prose-sm max-w-none">
+          <div
+            className="prose prose-invert prose-sm max-w-none"
+            dir={textDir}
+          >
             <ReactMarkdown>{message.content}</ReactMarkdown>
           </div>
         )}

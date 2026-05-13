@@ -5,7 +5,7 @@ import { PDFParse } from "pdf-parse";
 const CHUNK_SIZE = 500;
 const OVERLAP = 100;
 
-type SourceType = "lesson" | "workbook" | "vocab" | "grammar" | "genki" | "unknown";
+type SourceType = "summary" | "lesson" | "workbook" | "vocab" | "grammar" | "genki" | "unknown";
 
 interface Chunk {
   id: string;
@@ -20,6 +20,7 @@ function getSourceType(relPath: string): SourceType {
   const p = relPath.replace(/\\/g, "/");
   const folder = p.split("/")[0]?.toLowerCase() ?? "";
 
+  if (folder === "classes-summary") return "summary";
   if (folder === "lessons") return "lesson";
   if (folder === "workbooks") return "workbook";
   if (folder === "vocab") return "vocab";
@@ -46,6 +47,41 @@ function findPdfs(dir: string): string[] {
   return results;
 }
 
+function findMarkdownFiles(dir: string): string[] {
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir, { withFileTypes: true })
+    .filter((e) => e.isFile() && e.name.toLowerCase().endsWith(".md"))
+    .map((e) => path.join(dir, e.name));
+}
+
+// Chunk a markdown file by its level-1 (#) headings.
+// Each heading and its content becomes one chunk.
+// If a section is large, split further on level-2 (##) headings.
+function chunkMarkdown(text: string): string[] {
+  // Strip YAML frontmatter (--- ... ---)
+  const body = text.replace(/^---[\s\S]*?---\n?/, "").trim();
+
+  // Split on lines that start a new level-1 heading
+  const level1 = body.split(/(?=^# )/m).filter((s) => s.trim().length > 0);
+
+  const chunks: string[] = [];
+  for (const section of level1) {
+    if (section.length <= 1200) {
+      chunks.push(section.trim());
+    } else {
+      // Section is large — split on level-2 headings, keeping the # title as context
+      const title = section.match(/^(# [^\n]+)/)?.[1] ?? "";
+      const subsections = section.split(/(?=^## )/m).filter((s) => s.trim().length > 0);
+      for (const sub of subsections) {
+        const prefixed = sub.startsWith("## ") ? `${title}\n${sub.trim()}` : sub.trim();
+        chunks.push(prefixed);
+      }
+    }
+  }
+
+  return chunks.filter((c) => c.length > 20);
+}
+
 function splitIntoChunks(text: string): string[] {
   const chunks: string[] = [];
   let start = 0;
@@ -65,15 +101,42 @@ async function extractText(filePath: string): Promise<string> {
 
 async function main() {
   const docsDir = path.join(process.cwd(), "docs");
+  const summaryDir = path.join(docsDir, "classes-summary");
   const extractedDir = path.join(process.cwd(), "data", "extracted");
   const allChunksPath = path.join(process.cwd(), "data", "all-chunks.json");
 
   fs.mkdirSync(extractedDir, { recursive: true });
 
-  const pdfs = findPdfs(docsDir);
-  console.log(`Found ${pdfs.length} PDF(s)\n`);
-
   const allChunks: Chunk[] = [];
+
+  // ── 1. Class summaries (markdown, primary source) ─────────────────────────
+  const mdFiles = findMarkdownFiles(summaryDir);
+  console.log(`Found ${mdFiles.length} summary file(s) in docs/classes-summary/\n`);
+
+  for (const absPath of mdFiles) {
+    const relPath = path.relative(docsDir, absPath);
+    const baseName = path.basename(relPath, ".md");
+    const lessonNumber = getLessonNumber(relPath);
+    const text = fs.readFileSync(absPath, "utf-8");
+    const chunkTexts = chunkMarkdown(text);
+
+    chunkTexts.forEach((chunkText, index) => {
+      allChunks.push({
+        id: `${baseName}-${index}`,
+        sourceFile: relPath,
+        sourceType: "summary",
+        lessonNumber,
+        chunkIndex: index,
+        text: chunkText,
+      });
+    });
+
+    console.log(`  [summary] ${relPath} → ${chunkTexts.length} chunks`);
+  }
+
+  // ── 2. PDFs (secondary source — noisy but broader coverage) ───────────────
+  const pdfs = findPdfs(docsDir);
+  console.log(`\nFound ${pdfs.length} PDF(s)\n`);
 
   for (const absPath of pdfs) {
     const relPath = path.relative(docsDir, absPath);
@@ -87,13 +150,11 @@ async function main() {
       continue;
     }
 
-    // Save extracted text
     const txtName = relPath.replace(/[\\/]/g, "__").replace(/\.pdf$/i, ".txt");
     const txtPath = path.join(extractedDir, txtName);
     fs.writeFileSync(txtPath, text, "utf-8");
     console.log(`  Extracted ${text.length} chars → data/extracted/${txtName}`);
 
-    // Chunk and collect
     const sourceType = getSourceType(relPath);
     const lessonNumber = getLessonNumber(relPath);
     const baseName = path.basename(relPath, ".pdf");

@@ -458,11 +458,14 @@ function extractRomajiVocab(texts: string[]): string[] {
   return Array.from(seen).filter((w) => !ENGLISH_STOPWORDS.has(w));
 }
 
-// Strip model thinking blocks and internal log lines from any LLM output.
+const ARABIC_RE = /[؀-ۿ]/g;
+
+// Strip model thinking blocks, internal log lines, and Arabic characters from any LLM output.
 function stripModelArtifacts(text: string): string {
   return text
     .replace(/<think>[\s\S]*?<\/think>/gi, "")
     .replace(/^\s*(validat|generat|process|check|fixing|correcting|step \d|thinking)[^\n]*\n/gim, "")
+    .replace(ARABIC_RE, "")
     .trim();
 }
 
@@ -470,13 +473,11 @@ function stripModelArtifacts(text: string): string {
 // A line is considered corrupted if it has Latin letters mixed inside Hebrew text
 // (e.g. "טנ aka", "סוזuki").
 function cleanAnswerKey(text: string): string {
-  const lines = text.split("\n");
+  const lines = text.replace(ARABIC_RE, "").split("\n");
   return lines.map((line) => {
-    // If a numbered answer line contains both Hebrew characters AND isolated Latin word-fragments, flag it
     const hasHebrew = /[א-ת]/.test(line);
     const hasLatinFragment = /[א-ת][a-zA-Z]|[a-zA-Z][א-ת]/.test(line);
     if (hasHebrew && hasLatinFragment) {
-      // Strip the Latin fragments, keep only Hebrew/spaces/punctuation/numbers
       return line.replace(/[a-zA-Z]+/g, "").replace(/\s{2,}/g, " ").trim();
     }
     return line;
@@ -488,7 +489,7 @@ function cleanAnswerKey(text: string): string {
 // - strip inline translations (anything after — or →)
 function hebrewAnswerKeyPrompt(sentences: string, count: number, outputLanguage: string): string {
   const langNote = outputLanguage === "Hebrew"
-    ? `Translate into natural, fluent Hebrew only. No Latin letters, no romaji, no English.
+    ? `Translate into natural, fluent Hebrew only. No Latin letters, no romaji, no English, no Arabic letters.
 
 Use natural Hebrew phrasing:
   - "אני הולך לבית הספר" not "אני ילך לבית הספר"
@@ -503,7 +504,8 @@ For common nouns, use Hebrew words — never leave loanwords untranslated:
   kouen → פארק, eiga → סרט, terebi → טלוויזיה,
   uchi/ie → בית, tomodachi → חבר/ה, neko → חתול, inu → כלב.
 
-Write complete, natural Hebrew sentences. Never mix Latin characters inside a Hebrew word.`
+Write complete, natural Hebrew sentences. Never mix Latin or Arabic characters inside a Hebrew word.
+Use ONLY the Hebrew alphabet (א–ת). Arabic script (like ج ا ب etc.) is forbidden.`
     : `Translate into English only. No Japanese or romaji in the answers.`;
 
   return `You are a Japanese teacher. Translate each romaji sentence into ${outputLanguage}.
@@ -1380,12 +1382,12 @@ ${formatNumberedList(qList)}`);
 async function main() {
   const { prompt, outName } = parseArgs();
   if (!prompt) {
-    console.error("Usage: ts-node src/create-file.ts <prompt> [--out filename]");
+    console.log("Usage: ts-node src/create-file.ts <prompt> [--out filename]");
     process.exit(1);
   }
 
   if (!fs.existsSync(EMBEDDINGS_PATH)) {
-    console.error("Embeddings not found:", EMBEDDINGS_PATH);
+    console.log("Embeddings not found:", EMBEDDINGS_PATH);
     process.exit(1);
   }
 
@@ -1426,6 +1428,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error(err);
+  console.log(err);
   process.exit(1);
 });
