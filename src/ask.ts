@@ -58,9 +58,9 @@ const DIFFICULTY_INSTRUCTIONS: Record<Difficulty, string> = {
 };
 
 const MIX: Record<QuestionMode, Record<string, number>> = {
-  practice:    { lesson: 3, vocab: 1, workbook: 4, genki: 0, unknown: 0 },
-  explanation: { lesson: 5, vocab: 2, workbook: 1, genki: 0, unknown: 0 },
-  planning:    { lesson: 4, vocab: 2, workbook: 2, genki: 0, unknown: 0 },
+  practice:    { summary: 5, lesson: 1, vocab: 1, workbook: 1, genki: 0, unknown: 0 },
+  explanation: { summary: 6, lesson: 1, vocab: 1, workbook: 0, genki: 0, unknown: 0 },
+  planning:    { summary: 5, lesson: 1, vocab: 1, workbook: 1, genki: 0, unknown: 0 },
 };
 
 // ─── Output cleanup ───────────────────────────────────────────────────────────
@@ -79,6 +79,14 @@ const DUPLICATE_PARENS_RE = new RegExp(
   `(${HEBREW_WORD_RE.source})\\s*\\(\\1\\)`,
   "gu",
 );
+
+// Empty parentheses artifacts from PDF extraction: (), ( ), (  )
+const EMPTY_PARENS_RE = /\(\s*\)/g;
+
+// Lines that are only a bare number (PDF page artifacts like "08", "-08")
+function isPageArtifact(line: string): boolean {
+  return /^-?\s*\d{1,3}\s*$/.test(line.trim());
+}
 
 // Detect Hebrew and Japanese characters
 const HAS_HEBREW_RE = /[א-ת]/;
@@ -100,21 +108,26 @@ function stripStrayLatin(line: string): string {
 }
 
 function cleanOutput(text: string): string {
+  const seen = new Set<string>();
+
   return text
+    .replace(EMPTY_PARENS_RE, "")
     .split("\n")
-    // Remove CLI command lines
     .filter((line) => !COMMAND_LINE_RE.test(line))
-    // Strip Arabic and Cyrillic characters from each line
+    .filter((line) => !isPageArtifact(line))
     .map((line) => line.replace(ARABIC_RE, "").replace(CYRILLIC_RE, "").replace(KOREAN_RE, ""))
-    // Strip stray non-romaji Latin words from Hebrew text lines
     .map(stripStrayLatin)
-    // Remove lines that became empty or whitespace-only after stripping
     .filter((line) => line.trim().length > 0)
+    // Remove exact duplicate lines (repeated explanations)
+    .filter((line) => {
+      const key = line.trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
     .join("\n")
     .replace(QUOTED_COMMAND_RE, "")
-    // Remove duplicated Hebrew word in parentheses: "נושא (נושא)" → "נושא"
     .replace(DUPLICATE_PARENS_RE, "$1")
-    // Collapse excess blank lines
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
@@ -144,12 +157,38 @@ Critical grammar rules — never violate these:
 - Never claim が marks the object. Never claim を marks the subject.
 - Do not mix Arabic script or unrelated writing systems into explanations.
 - For Japanese examples, use: Japanese (romaji) — translation
+
+Example quality rules — always apply:
+- Before writing any example, ask: does this make sense in real life?
+- Verb+noun pairing must be semantically natural:
+  taberu (eat) → food only. nomimasu (drink) → liquids only. yomimasu (read) → text/books.
+- Adjective+noun pairing must be semantically natural:
+  BAD: "kono hon wa oishii desu" — books are not delicious.
+  GOOD: "kono ramen wa oishii desu" — food is delicious.
+  oishii → food. omoshiroi → books, movies, people. kirei → places, people, flowers. tanoshii → activities.
+- Use beginner vocabulary only: watashi, anata, tomodachi, sensei, neko, inu, hon, mizu, gohan, koohii, gakkou, ie, kouen.
+- One example per grammar point is enough. Do not pad with similar examples.
+
+Known exceptions — never overgeneralize from these:
+- いく (iku) → いって (itte) in te-form. This is an IRREGULAR EXCEPTION.
+  DO NOT say "all く verbs become ～って". Most く verbs follow the regular pattern:
+  かく → かいて, きく → きいて, あるく → あるいて.
+  Always label iku→itte as "an important exception to the regular rule".
+- きれい (kirei, beautiful/clean) is a NA-ADJECTIVE, not an i-adjective.
+  It ends in い but does NOT conjugate like an i-adjective.
+  WRONG: きれいくない. CORRECT: きれいじゃない / きれいではない.
+  Same applies to きらい (kirai, dislike) — also na-adjective despite ending in い.
+  When explaining adjectives, explicitly note: "Words ending in い are usually i-adjectives,
+  but きれい and きらい are important exceptions — they are na-adjectives."
 `;
+
 
 const HEBREW_BASE_RULES = `
 כללי שפה עברית — חובה לפעול לפיהם:
 - כתוב עברית תקנית, שוטפת וטבעית. אל תתרגם מילולית מאנגלית.
-- ההסבר חייב להיות עברית בלבד. אסור לערבב כתב ערבי, קירילי, או אנגלית פנימה.
+- ההסבר חייב להיות עברית בלבד. מותר רק: אותיות עבריות, יפנית/רומאג'י בדוגמאות, ספרות.
+  אסור לחלוטין: ערבית, קירילית, קוריאנית, אנגלית בתוך משפטים עבריים.
+  הכלל: אם אתה כותב משפט עברי — כל המילים הן עברית. יפנית מופיעה רק כדוגמה מובחנת.
 - אל תערבב אותיות עבריות עם רומאג'י בתוך אותה מילה.
   שגוי: "אני watashi מדבר"
   נכון: "אני (watashi) מדבר"
@@ -172,6 +211,10 @@ const HEBREW_BASE_RULES = `
   נכון: "בפעולה" (ללא רווח — ב' היא קידומת דבוקה)
 
 - אל תשתמש במילת-כותרת בקוריאנית (כמו 예시). השתמש רק בעברית: "דוגמאות", "הסבר", "סיכום".
+- אל תכתוב סוגריים ריקים: () או ( ).
+- אל תכתוב מספרים בודדים שאינם חלק ממשפט (כמו "08" או "-08").
+- אל תחזור על אותה נקודה פעמיים בתשובה — כל רעיון מופיע פעם אחת בלבד.
+- אם החומר שסופק מכיל טקסט רועש או ארטיפקטים של PDF — אל תעתיק אותם. נסח מחדש בצורה נקייה וטבעית.
 
 תרגומים נכונים — חובה להשתמש בהם:
   東京 / Toukyou → טוקיו (לא "טאיקו")
@@ -202,11 +245,66 @@ const HEBREW_BASE_RULES = `
 - צורת て היא צורת פועל — לא חלקיק.
 - אל תטען ש-が מסמן מושא. אל תטען ש-を מסמן נושא.
 
+איכות דוגמאות — חובה לפעול לפי כללים אלה:
+- לפני כתיבת דוגמה — בדוק: האם זה הגיוני במציאות?
+- צירוף פועל+מושא חייב להיות טבעי סמנטית:
+  taberu (לאכול) → אוכל בלבד. nomimasu (לשתות) → נוזלים בלבד. yomimasu (לקרוא) → טקסט/ספרים.
+- צירוף שם תואר+שם עצם חייב להיות טבעי סמנטית:
+  שגוי: "kono hon wa oishii desu" — ספרים אינם טעימים.
+  נכון: "kono ramen wa oishii desu" — אוכל הוא טעים.
+  oishii → אוכל בלבד. omoshiroi → ספרים, סרטים, אנשים. kirei → מקומות, אנשים, פרחים.
+- אוצר מילים למתחילים בלבד: watashi, tomodachi, sensei, neko, inu, hon, mizu, gohan, koohii, gakkou, ie, kouen.
+- דוגמה אחת לכל נקודה דקדוקית מספיקה. אל תרבה בדוגמאות דומות.
+
+חריגים ידועים — אסור להכליל מהם:
+- いく (iku) → いって (itte) בצורת て — זהו חריג לא-סדיר.
+  אסור לומר "כל פעלי く הופכים ל-～って". רוב פעלי く פועלים לפי הכלל הרגיל:
+  かく → かいて, きく → きいて, あるく → あるいて.
+  תמיד ציין: "iku→itte הוא חריג חשוב לכלל הרגיל".
+- きれい (kirei, יפה/נקי) — שם תואר מסוג な (na-adjective), לא i-adjective.
+  הוא מסתיים ב-い אבל אינו מוטה כמו i-adjective.
+  שגוי: きれいくない. נכון: きれいじゃない / きれいではない.
+  כך גם きらい (kirai, לא אוהב) — na-adjective למרות שמסתיים ב-い.
+  כשמסבירים שמות תואר, ציין במפורש: "מילים המסתיימות ב-い הן בדרך כלל i-adjective,
+  אך きれい ו-きらい הן חריגים חשובים — הן na-adjective".
+
 נכונות פעלים — דוגמאות נכונות:
   hatarakimasu (לעבוד) — לא "atsukite"
   kakimasu (לכתוב) — לא "kaku masu"
   tabemasu (לאכול) — לא "tabe masu"
   ikimasu (ללכת) — לא "iku masu"
+`;
+
+const TEACHING_STYLE = `
+Teaching style — always follow:
+- Prioritize clarity over linguistic precision. Keep explanations beginner-friendly unless advanced detail is explicitly requested.
+- Distinguish between beginner intuition and strict linguistics when both are relevant. Lead with the intuition.
+- Prioritize natural Japanese usage and communication intent over literal word-by-word translation.
+- When relevant, briefly mention nuance, politeness level, or cultural context.
+- Do not overload explanations with edge cases. Mention one or two if critical; skip the rest.
+- If a grammar rule has exceptions, say so explicitly. Never treat an exception as the general rule.
+  Example: いく → いって is an important exception. Most く verbs become ～いて instead.
+- Do not derive broad grammar rules from a single example.
+- Do not classify words by surface appearance alone. Check the actual word type.
+  Example: きれい ends in い but is a na-adjective, not an i-adjective. Always verify, never assume.
+- Avoid overconfident language for nuanced or advanced topics. Say "in most cases" or "generally" when appropriate.
+- Avoid repetitive phrasing, padding, and AI-sounding filler. Every sentence should add something.
+`;
+
+const TEACHING_STYLE_HE = `
+סגנון הוראה — חובה לפעול לפיו:
+- העדף בהירות על פני דיוק בלשני. שמור על גישה מתאימה למתחילים אלא אם נדרש הסבר מתקדם במפורש.
+- הבחן בין אינטואיציה של מתחיל לבין דקדוק מדויק כשהשניים רלוונטיים. התחל עם האינטואיציה.
+- העדף שימוש טבעי ביפנית על פני תרגום מילולי. ההסבר צריך לשקף איך יפנים מדברים בפועל.
+- כשרלוונטי, הסבר בקצרה ניואנס, רמת נימוס, או הקשר תרבותי.
+- אל תעמיס הסבר באי-יוצאים מן הכלל. ציין אחד או שניים אם חיוניים; השמט את השאר.
+- אם לכלל דקדוקי יש חריגים — אמור זאת במפורש. אל תציג חריג ככלל כללי.
+  דוגמה: いく → いって הוא חריג חשוב. רוב פעלי く הופכים ל-～いて.
+- אל תסיק כללי דקדוק רחבים ממשל אחד.
+- אל תסווג מילים לפי מראה חיצוני בלבד. בדוק את סוג המילה בפועל.
+  דוגמה: きれい מסתיים ב-い אבל הוא na-adjective, לא i-adjective. תמיד ודא, אל תניח.
+- הימנע מביטחון יתר בנושאים עדינים או מתקדמים. השתמש ב"בדרך כלל" כשמתאים.
+- אל תחזור על ניסוחים, אל תמלא במילים ריקות, ואל תישמע כמו AI. כל משפט צריך להוסיף משהו.
 `;
 
 // ─── Detection functions ──────────────────────────────────────────────────────
@@ -287,8 +385,8 @@ function buildSystemPrompt(
     ? "You are a Japanese teacher. Answer in Hebrew."
     : "You are a Japanese teacher. Answer in English.";
 
-  const base     = `${OUTPUT_RULES}${GRAMMAR_ACCURACY_RULES}`;
-  const hebrewBase = `${OUTPUT_RULES}${HEBREW_BASE_RULES}`;
+  const base       = `${OUTPUT_RULES}${GRAMMAR_ACCURACY_RULES}${TEACHING_STYLE}`;
+  const hebrewBase = `${OUTPUT_RULES}${HEBREW_BASE_RULES}${TEACHING_STYLE_HE}`;
 
   if (intent === "explanation") {
     if (language === "hebrew") {
@@ -302,6 +400,8 @@ ${hebrewBase}
 - אם ההקשר מספק מידע רלוונטי — השתמש בו.
 - עבור נושאי דקדוק בסיסיים — תמיד תן הסבר מלא מידיעתך, גם אם ההקשר חלקי.
 - אין לכתוב "החומר אינו כולל..." — הסבר את הנושא ישירות.
+- אל תחזור על אותו רעיון פעמיים. כל נקודה מופיעה פעם אחת בלבד.
+- אל תכתוב סוגריים ריקים, מספרים בודדים, או ארטיפקטים של PDF.
 
 נושאים שמותר תמיד להסביר (גם ללא הקשר):
   חלקיקים: は, が, を, に, で, へ, も, と, の
@@ -313,6 +413,7 @@ ${hebrewBase}
 מבנה התשובה:
   1. הסבר פשוט וברור
   2. 2–3 דוגמאות בפורמט: יפנית (romaji) — תרגום
+     (השתמש בצירופים טבעיים בלבד: gohan+tabemasu, mizu+nomimasu, hon+yomimasu, gakkou+ikimasu)
   3. סיכום קצר
 
 שפה טבעית ופעילה: "החלקיק מסמן..." ולא "מסומן על ידי".
@@ -336,6 +437,11 @@ Topics you may always explain regardless of context:
 
 Format for Japanese examples (romaji in lowercase):
   Japanese (romaji) — translation
+
+Example quality:
+- Use only natural verb+noun pairings: eat+food, drink+water, read+book, go+school.
+- Never invent odd combos just to fill space (e.g. "eat the desk", "drink the book").
+- Beginner vocabulary only: watashi, tomodachi, neko, gohan, mizu, hon, gakkou, ie.
 
 Structure:
   1. Short explanation paragraph

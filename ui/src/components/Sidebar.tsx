@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { SidebarView } from "../types";
 
 interface Props {
   view: SidebarView;
   onViewChange: (v: SidebarView) => void;
+  onClearHistory: () => void;
 }
 
 const NAV_ITEMS: { id: SidebarView; label: string; icon: string }[] = [
@@ -11,7 +13,22 @@ const NAV_ITEMS: { id: SidebarView; label: string; icon: string }[] = [
   { id: "outputs", label: "Outputs", icon: "📁" },
 ];
 
-export default function Sidebar({ view, onViewChange }: Props) {
+export default function Sidebar({ view, onViewChange, onClearHistory }: Props) {
+  const [confirming, setConfirming] = useState(false);
+
+  function handleClearClick() {
+    setConfirming(true);
+  }
+
+  function handleConfirm() {
+    setConfirming(false);
+    onClearHistory();
+  }
+
+  function handleCancel() {
+    setConfirming(false);
+  }
+
   return (
     <aside className="w-56 bg-gray-900 border-r border-gray-800 flex flex-col py-4 gap-1 px-2 flex-shrink-0">
       <div className="px-3 py-2 mb-2">
@@ -33,6 +50,35 @@ export default function Sidebar({ view, onViewChange }: Props) {
           {item.label}
         </button>
       ))}
+
+      <div className="mt-auto pt-4 border-t border-gray-800 mx-1">
+        {confirming ? (
+          <div className="px-3 py-2 space-y-2">
+            <p className="text-xs text-gray-400">Clear all history?</p>
+            <div className="flex gap-2">
+              <button
+                onClick={handleConfirm}
+                className="flex-1 px-2 py-1 rounded-md text-xs bg-red-600 hover:bg-red-500 text-white transition-colors"
+              >
+                Yes
+              </button>
+              <button
+                onClick={handleCancel}
+                className="flex-1 px-2 py-1 rounded-md text-xs bg-gray-700 hover:bg-gray-600 text-gray-200 transition-colors"
+              >
+                No
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={handleClearClick}
+            className="w-full px-3 py-2 rounded-lg text-xs text-gray-600 hover:text-red-400 hover:bg-gray-800 transition-colors text-left"
+          >
+            🗑 Clear history
+          </button>
+        )}
+      </div>
     </aside>
   );
 }
