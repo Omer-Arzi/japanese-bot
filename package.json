@@ -10,7 +10,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "ui:install": "npm --prefix ui install",
     "ui:dev": "npm --prefix ui run dev",
-    "tauri:dev": "npx tauri dev",
+    "tauri:dev": "npx ts-node src/setup/selectProvider.ts && npx tauri dev",
     "tauri:build": "npx tauri build",
     "eval:sensei": "npx ts-node src/eval/runSenseiEval.ts",
     "eval:critic": "npx ts-node src/eval/critic.ts",
@@ -25,9 +25,11 @@
   },
   "dependencies": {
     "@types/node": "^25.6.0",
+    "@types/prompts": "^2.4.9",
     "chromadb": "^3.4.3",
     "ollama": "^0.6.3",
     "pdf-parse": "^2.4.5",
+    "prompts": "^2.4.2",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
   }
