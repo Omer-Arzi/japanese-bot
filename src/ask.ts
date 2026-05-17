@@ -1,9 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import ollama from "ollama";
-
-const EMBED_MODEL = "mxbai-embed-large";
-const CHAT_MODEL = "qwen3:14b";
+import { llm } from "./llm/LlmService";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -168,6 +165,16 @@ Example quality rules — always apply:
   oishii → food. omoshiroi → books, movies, people. kirei → places, people, flowers. tanoshii → activities.
 - Use beginner vocabulary only: watashi, anata, tomodachi, sensei, neko, inu, hon, mizu, gohan, koohii, gakkou, ie, kouen.
 - One example per grammar point is enough. Do not pad with similar examples.
+
+Romaji accuracy — exact romanization lookup for 書く (kaku, "to write"):
+  書く        = kaku
+  書きます    = kakimasu       ← NOT kimasu (kimasu = "come")
+  書いて      = kaite          ← NOT kite   (kite   = "come, te-form")
+  書いています = kaite imasu   ← NOT kite imasu
+  書いた      = kaita
+  書きません  = kakimasen
+Never confuse the く→き→か stem of 書く with き (the stem of くる, "to come").
+When you write a romaji reading next to any form of 書, check: does it start with "ka"?
 
 Known exceptions — never overgeneralize from these:
 - いく (iku) → いって (itte) in te-form. This is an IRREGULAR EXCEPTION.
@@ -594,8 +601,7 @@ async function main() {
   const chunks: EmbeddedChunk[] = JSON.parse(fs.readFileSync(embeddingsPath, "utf-8"));
 
   console.log("Creating question embedding...");
-  const response = await ollama.embed({ model: EMBED_MODEL, input: question });
-  const questionEmbedding = response.embeddings[0]!;
+  const questionEmbedding = await llm.embed(question);
 
   const intent     = detectIntent(question);
   const mode       = detectMode(question);
@@ -673,13 +679,10 @@ ${context}
 Question: ${question}`;
 
   console.log("\nAsking model...\n");
-  const chat = await ollama.chat({
-    model: CHAT_MODEL,
-    messages: [{ role: "user", content: prompt }],
-  });
+  const answer = await llm.chat([{ role: "user", content: prompt }]);
 
   console.log("Answer:\n");
-  console.log(cleanOutput(chat.message.content));
+  console.log(cleanOutput(answer));
 }
 
 main().catch((error) => {

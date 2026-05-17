@@ -26,3 +26,9 @@ src-tauri/target/
 # UI build
 ui/node_modules/
 ui/dist/
+
+# Eval run outputs (generated, not source)
+evals/runs/
+
+# Local LLM provider config (machine-specific, never commit)
+.local-llm-config.json

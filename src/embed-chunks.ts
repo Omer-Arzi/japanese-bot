@@ -1,8 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import ollama from "ollama";
-
-const MODEL = "mxbai-embed-large";
+import { llm } from "./llm/LlmService";
 
 interface Chunk {
   id: string;
@@ -31,14 +29,14 @@ async function main() {
     const chunk = chunks[i];
     console.log(`Embedding ${i + 1}/${total}`);
 
-    const response = await ollama.embed({ model: MODEL, input: chunk!.text });
+    const response = { embedding: await llm.embed(chunk!.text) };
 
     results.push({
       id: chunk!.id,
       source: chunk!.source,
       chunkIndex: chunk!.chunkIndex,
       text: chunk!.text,
-      embedding: response.embeddings[0]!,
+      embedding: response.embedding,
     });
   }
 
