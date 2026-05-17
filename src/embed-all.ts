@@ -1,8 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import ollama from "ollama";
-
-const EMBED_MODEL = "mxbai-embed-large";
+import { llm } from "./llm/LlmService";
 const FALLBACK_CHUNK_SIZE = 250;
 const FALLBACK_OVERLAP = 50;
 
@@ -59,7 +57,7 @@ async function main() {
     process.stdout.write(`Embedding ${i + 1}/${total}\r`);
 
     try {
-      const response = await ollama.embed({ model: EMBED_MODEL, input: chunk.text });
+      const embedding = await llm.embed(chunk.text);
       results.push({
         id: chunk.id,
         parentChunkId: null,
@@ -68,7 +66,7 @@ async function main() {
         lessonNumber: chunk.lessonNumber,
         chunkIndex: chunk.chunkIndex,
         text: chunk.text,
-        embedding: response.embeddings[0]!,
+        embedding,
       });
     } catch (err) {
       if (!isContextLengthError(err)) {
@@ -83,7 +81,7 @@ async function main() {
 
       for (let j = 0; j < subchunks.length; j++) {
         try {
-          const subResponse = await ollama.embed({ model: EMBED_MODEL, input: subchunks[j]! });
+          const subEmbedding = await llm.embed(subchunks[j]!);
           results.push({
             id: `${chunk.id}__part-${j + 1}`,
             parentChunkId: chunk.id,
@@ -92,7 +90,7 @@ async function main() {
             lessonNumber: chunk.lessonNumber,
             chunkIndex: chunk.chunkIndex,
             text: subchunks[j]!,
-            embedding: subResponse.embeddings[0]!,
+            embedding: subEmbedding,
           });
         } catch (subErr) {
           console.warn(`\nFailed subchunk ${chunk.id}__part-${j + 1}: ${subErr}`);

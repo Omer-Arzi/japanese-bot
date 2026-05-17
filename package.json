@@ -11,7 +11,10 @@
     "ui:install": "npm --prefix ui install",
     "ui:dev": "npm --prefix ui run dev",
     "tauri:dev": "npx tauri dev",
-    "tauri:build": "npx tauri build"
+    "tauri:build": "npx tauri build",
+    "eval:sensei": "npx ts-node src/eval/runSenseiEval.ts",
+    "eval:critic": "npx ts-node src/eval/critic.ts",
+    "eval:fix-tasks": "npx ts-node src/eval/generateFixTasks.ts"
   },
   "keywords": [],
   "author": "",

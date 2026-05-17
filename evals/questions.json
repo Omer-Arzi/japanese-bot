@@ -1,0 +1,52 @@
+[
+  {
+    "id": "q01",
+    "topic": "particles-wa-ga",
+    "question": "What is the difference between は and が in Japanese?"
+  },
+  {
+    "id": "q02",
+    "topic": "te-form-exception",
+    "question": "How do you form the te-form of いく (iku)? Is it regular?"
+  },
+  {
+    "id": "q03",
+    "topic": "adjective-classification",
+    "question": "Is きれい (kirei) an i-adjective or a na-adjective? How do you make it negative?"
+  },
+  {
+    "id": "q04",
+    "topic": "particles-ni-de",
+    "question": "What is the difference between に and で when talking about location?"
+  },
+  {
+    "id": "q05",
+    "topic": "particle-wo",
+    "question": "What does the particle を (wo) mark in a sentence? Give an example."
+  },
+  {
+    "id": "q06",
+    "topic": "past-tense",
+    "question": "How do you form the past tense of a verb in polite Japanese? Give an example with たべます (tabemasu)."
+  },
+  {
+    "id": "q07",
+    "topic": "negative-form",
+    "question": "How do you make a verb negative in polite Japanese? Give an example with のみます (nomimasu)."
+  },
+  {
+    "id": "q08",
+    "topic": "particle-to",
+    "question": "How is the particle と (to) used to list nouns? What is its role when used before を?"
+  },
+  {
+    "id": "q09",
+    "topic": "na-adjectives",
+    "question": "How do na-adjectives work in Japanese? How do you use them before a noun and in a sentence ending?"
+  },
+  {
+    "id": "q10",
+    "topic": "te-form-regular",
+    "question": "How do you form the te-form of かく (kaku)? What is the general pattern for く verbs?"
+  }
+]

@@ -1,9 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import ollama from "ollama";
-
-const EMBED_MODEL = "mxbai-embed-large";
-const CHAT_MODEL = "qwen3:14b";
+import { llm } from "./llm/LlmService";
 const EMBEDDINGS_PATH = path.join(process.cwd(), "data", "all-embeddings.json");
 const OUTPUT_DIR = path.join(process.cwd(), "output");
 const EXERCISE_BANK_PATH = path.join(process.cwd(), "data", "exercise-bank.json");
@@ -557,32 +554,23 @@ function validateExerciseList(text: string, expected: number): string {
 }
 
 async function embedText(text: string): Promise<number[]> {
-  const res = await ollama.embed({ model: EMBED_MODEL, input: text });
-  return res.embeddings[0]!;
+  return llm.embed(text);
 }
 
 // Stream a single chat call to stdout and the file stream simultaneously.
 // Falls back to non-streaming if streaming fails.
 async function streamChat(chatPrompt: string, fileStream: fs.WriteStream): Promise<void> {
+  const messages = [{ role: "user" as const, content: chatPrompt }];
   try {
-    const stream = await ollama.chat({
-      model: CHAT_MODEL,
-      messages: [{ role: "user", content: chatPrompt }],
-      stream: true,
-    });
-    for await (const part of stream) {
-      const token = part.message.content;
+    for await (const token of llm.chatStream(messages)) {
       process.stdout.write(token);
       fileStream.write(token);
     }
   } catch {
     // Fallback: non-streaming
-    const res = await ollama.chat({
-      model: CHAT_MODEL,
-      messages: [{ role: "user", content: chatPrompt }],
-    });
-    process.stdout.write(res.message.content);
-    fileStream.write(res.message.content);
+    const content = await llm.chat(messages);
+    process.stdout.write(content);
+    fileStream.write(content);
   }
 }
 
@@ -707,11 +695,7 @@ Fix these specific issues:
 Exercises to validate:
 ${exercises}`;
 
-  const res = await ollama.chat({
-    model: CHAT_MODEL,
-    messages: [{ role: "user", content: validationPrompt }],
-  });
-  return res.message.content.trim();
+  return (await llm.chat([{ role: "user", content: validationPrompt }])).trim();
 }
 
 async function generateShortWorksheet(
@@ -789,16 +773,11 @@ Context:
 ${context}`;
 
     let rawQuestionsText = "";
+    const qMessages = [{ role: "user" as const, content: questionsPrompt }];
     try {
-      const stream = await ollama.chat({
-        model: CHAT_MODEL,
-        messages: [{ role: "user", content: questionsPrompt }],
-        stream: true,
-      });
-      for await (const part of stream) rawQuestionsText += part.message.content;
+      for await (const token of llm.chatStream(qMessages)) rawQuestionsText += token;
     } catch {
-      const res = await ollama.chat({ model: CHAT_MODEL, messages: [{ role: "user", content: questionsPrompt }] });
-      rawQuestionsText = res.message.content;
+      rawQuestionsText = await llm.chat(qMessages);
     }
 
     process.stderr.write("  Validating grammar...\n");
@@ -816,8 +795,7 @@ ${context}`;
     if (toGenerate > 0 && newQuestionsList.length > 0) {
       const newQText = formatNumberedList(newQuestionsList);
       const answersPrompt = hebrewAnswerKeyPrompt(newQText, newQuestionsList.length, outputLanguage);
-      const answersRes = await ollama.chat({ model: CHAT_MODEL, messages: [{ role: "user", content: answersPrompt }] });
-      const rawAnswers = stripModelArtifacts(answersRes.message.content.trim());
+      const rawAnswers = stripModelArtifacts((await llm.chat([{ role: "user", content: answersPrompt }])).trim());
       const cleanNew = outputLanguage === "Hebrew" ? cleanAnswerKey(rawAnswers) : rawAnswers;
       newAnswersList = parseNumberedList(cleanNew);
     }
@@ -934,16 +912,11 @@ Context:
 ${context}`;
 
       let rawQuestionsText = "";
+      const qMsgs = [{ role: "user" as const, content: questionsPrompt }];
       try {
-        const stream = await ollama.chat({
-          model: CHAT_MODEL,
-          messages: [{ role: "user", content: questionsPrompt }],
-          stream: true,
-        });
-        for await (const part of stream) rawQuestionsText += part.message.content;
+        for await (const token of llm.chatStream(qMsgs)) rawQuestionsText += token;
       } catch {
-        const res = await ollama.chat({ model: CHAT_MODEL, messages: [{ role: "user", content: questionsPrompt }] });
-        rawQuestionsText = res.message.content;
+        rawQuestionsText = await llm.chat(qMsgs);
       }
 
       process.stderr.write(`  Validating grammar for lesson ${lessonNum}...\n`);
@@ -962,8 +935,7 @@ ${context}`;
       if (toGenerate > 0 && newQuestionsList.length > 0) {
         const newQText = formatNumberedList(newQuestionsList);
         const answersPrompt = hebrewAnswerKeyPrompt(newQText, newQuestionsList.length, outputLanguage);
-        const answersRes = await ollama.chat({ model: CHAT_MODEL, messages: [{ role: "user", content: answersPrompt }] });
-        const rawAnswers = stripModelArtifacts(answersRes.message.content.trim());
+        const rawAnswers = stripModelArtifacts((await llm.chat([{ role: "user", content: answersPrompt }])).trim());
         const cleanNew = outputLanguage === "Hebrew" ? cleanAnswerKey(rawAnswers) : rawAnswers;
         newAnswersList = parseNumberedList(cleanNew);
       }
@@ -1024,11 +996,7 @@ async function generateFullWorkbook(
   const allNewEntries: ExerciseEntry[] = [];
 
   async function llmCall(userPrompt: string): Promise<string> {
-    const res = await ollama.chat({
-      model: CHAT_MODEL,
-      messages: [{ role: "user", content: userPrompt }],
-    });
-    return stripModelArtifacts(res.message.content.trim());
+    return stripModelArtifacts((await llm.chat([{ role: "user", content: userPrompt }])).trim());
   }
 
   // --- Section spec definitions ---
