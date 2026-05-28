@@ -475,6 +475,89 @@ function checkHebrewDuplicateSentences(answer: string): Finding {
   };
 }
 
+// ─── Placeholder text check ───────────────────────────────────────────────────
+
+// FAIL if the answer contains bracket-placeholder text that should have been
+// replaced by real content — e.g. LLM echoing a format example from the prompt.
+function checkPlaceholderText(answer: string): Finding {
+  const PLACEHOLDER_PATTERNS: Array<{ re: RegExp; label: string }> = [
+    { re: /\[short\s+quote(?:\s+from\s+(?:the\s+)?(?:text|context|excerpt))?\]/i, label: '"[short quote...]"' },
+    { re: /\[quote\s+here\]/i,   label: '"[quote here]"' },
+    { re: /\[excerpt\]/i,        label: '"[excerpt]"' },
+    { re: /\[TODO\]/i,           label: '"[TODO]"' },
+    { re: /\[ציטוט\s+קצר\]/,    label: '"[ציטוט קצר]"' },
+    { re: /\[your\s+(?:quote|excerpt|text)\]/i, label: '"[your quote/excerpt/text]"' },
+    // Generic bracket placeholder: [word word] where inner text looks like a substitution hint
+    { re: /\[(?:insert|add|put|place|copy)\s+[^\]]{3,40}\]/i, label: '"[insert/add/copy ...]"' },
+  ];
+
+  const hit = PLACEHOLDER_PATTERNS.find(({ re }) => re.test(answer));
+  return {
+    check: "placeholder-text",
+    passed: !hit,
+    excerpt: hit ? excerpt(answer, hit.re) : undefined,
+    detail: hit ? `Answer contains placeholder text ${hit.label}` : undefined,
+    likelyCause:
+      "System prompt uses bracket placeholders as format examples; the model echoed them instead of substituting real content",
+    suggestedFix:
+      'Replace bracket placeholders in buildSystemPrompt() answer-format section with prose instructions: "copy a short phrase directly from the retrieved text, or omit if nothing fits".',
+  };
+}
+
+// ─── Lookup answer quality ────────────────────────────────────────────────────
+
+// Only runs for questions with topic starting "lookup-".
+// FAIL if answer uses general knowledge phrases (typically, usually, in most courses...)
+// FAIL if answer contains neither a lesson number nor the prescribed fallback sentence.
+function checkLookupAnswerQuality(topic: string, answer: string): Finding {
+  const SKIP: Finding = { check: "lookup-answer-quality", passed: true };
+  if (!topic.startsWith("lookup-")) return SKIP;
+
+  // General knowledge phrases that must never appear in a lookup answer
+  const GENERAL_PHRASES: Array<{ re: RegExp; label: string }> = [
+    { re: /\btypically\b/i,                      label: '"typically"' },
+    { re: /\busually\b/i,                         label: '"usually"' },
+    { re: /\bin\s+most\s+beginner\s+courses?\b/i, label: '"in most beginner courses"' },
+    { re: /\bin\s+general\b/i,                    label: '"in general"' },
+    { re: /\bgenerally\s+speaking\b/i,            label: '"generally speaking"' },
+    { re: /\bin\s+standard\s+japanese\b/i,        label: '"in standard Japanese"' },
+  ];
+
+  const hit = GENERAL_PHRASES.find(({ re }) => re.test(answer));
+  if (hit) {
+    return {
+      check: "lookup-answer-quality",
+      passed: false,
+      excerpt: excerpt(answer, hit.re),
+      detail: `Answer uses general knowledge phrase ${hit.label} in a lookup-intent response`,
+      likelyCause:
+        "Lookup intent was not detected, so the normal grammar prompt was used — which allows general knowledge",
+      suggestedFix:
+        "Check that LOOKUP_PATTERNS in ask.ts matches the question. Verify Mode: lookup appears in diagnostics output.",
+    };
+  }
+
+  // Must have at least a lesson number OR the fallback sentence
+  const hasLessonNumber = /\blesson\s+\d+\b/i.test(answer);
+  const hasFallback = /couldn['']t\s+find|could\s+not\s+find|לא\s+מצאתי/i.test(answer);
+
+  if (!hasLessonNumber && !hasFallback) {
+    return {
+      check: "lookup-answer-quality",
+      passed: false,
+      excerpt: excerpt(answer, /^.{0,120}/m),
+      detail:
+        "Lookup answer contains neither a lesson number nor the fallback sentence",
+      likelyCause:
+        'Model ignored lookup mode and gave a general grammar explanation. Check that "Mode: lookup" appears in ask-sensei diagnostics.',
+      suggestedFix:
+        'Re-run with the exact question and check stdout for "Mode: lookup | Retrieval-only: YES". If it shows a different mode, add the missing phrase to LOOKUP_PATTERNS in ask.ts.',
+    };
+  }
+
+  return SKIP;
+}
+
 // ─── Per-question runner ──────────────────────────────────────────────────────
 
 function critiqueOne(result: EvalResult): QuestionReport {
@@ -504,6 +587,8 @@ function critiqueOne(result: EvalResult): QuestionReport {
     checkToVsWo(result.question, result.answer),
     checkMixedLanguageGarbage(result.answer),
     checkRomajiAccuracy(result.answer),
+    checkPlaceholderText(result.answer),
+    checkLookupAnswerQuality(result.topic, result.answer),
   ];
 
   const status = findings.every((f) => f.passed) ? "PASS" : "FAIL";

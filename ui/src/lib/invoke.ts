@@ -1,4 +1,5 @@
 // Direct access to the Tauri IPC bridge — avoids @tauri-apps/api version issues.
+import { STRINGS } from "../constants/strings";
 
 declare global {
   interface Window {
@@ -17,11 +18,7 @@ export async function invoke<T>(
   args?: Record<string, unknown>,
 ): Promise<T> {
   if (!window.__TAURI_INTERNALS__) {
-    throw new Error(
-      "Not running inside the Tauri window.\n" +
-        "Start the app with:\n  npm run tauri:dev\n\n" +
-        "Do not open localhost:5173 directly in a browser.",
-    );
+    throw new Error(STRINGS.errors.notInTauri);
   }
   return window.__TAURI_INTERNALS__.invoke<T>(cmd, args ?? {});
 }

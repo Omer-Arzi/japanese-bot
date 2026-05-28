@@ -1,13 +1,7 @@
 import { useState } from "react";
 import { invoke } from "../lib/invoke";
 import { Message, Mode } from "../types";
-
-const MODE_PREFIXES: Partial<Record<Mode, string>> = {
-  explain: "explain ",
-  correct: "is this correct: ",
-  analyze: "break down: ",
-  practice: "practice ",
-};
+import { STRINGS } from "../constants/strings";
 
 export function useChat(
   mode: Mode,
@@ -19,7 +13,7 @@ export function useChat(
     onAddMessage({ role: "user", content: text });
     setIsLoading(true);
 
-    const prefix = MODE_PREFIXES[mode] ?? "";
+    const prefix = (STRINGS.modePrefixes as Partial<Record<Mode, string>>)[mode] ?? "";
     const prompt = prefix ? `${prefix}${text}` : text;
 
     try {

@@ -48,5 +48,70 @@
     "id": "q10",
     "topic": "te-form-regular",
     "question": "How do you form the te-form of かく (kaku)? What is the general pattern for く verbs?"
+  },
+  {
+    "id": "q11",
+    "topic": "lookup-te-form",
+    "question": "In which lesson did we learn the て-form?"
+  },
+  {
+    "id": "q12",
+    "topic": "lookup-particles",
+    "question": "Where in the course materials do particles like は and が appear?"
+  },
+  {
+    "id": "q13",
+    "topic": "lookup-na-adjectives",
+    "question": "Did we already cover na-adjectives in class?"
+  },
+  {
+    "id": "q14",
+    "topic": "lookup-past-tense",
+    "question": "What lesson covers the past tense of verbs?"
+  },
+  {
+    "id": "q15",
+    "topic": "lookup-negative",
+    "question": "Is the negative form of verbs explained somewhere in my course materials?"
+  },
+  {
+    "id": "q16",
+    "topic": "lookup-te-form-lesson-number",
+    "question": "what is the lesson number we learned about the \"te\" form, from lesson 1-12?"
+  },
+  {
+    "id": "q17",
+    "topic": "lookup-teaching-te-form",
+    "question": "Which lesson did we learn the te-form in?"
+  },
+  {
+    "id": "q18",
+    "topic": "lookup-teaching-te-form-coverage",
+    "question": "Did we already learn te-form in class?"
+  },
+  {
+    "id": "q19",
+    "topic": "lookup-appearance-te-form",
+    "question": "Where does the te-form appear in the workbook?"
+  },
+  {
+    "id": "q20",
+    "topic": "lookup-topic-index-te-form-lesson",
+    "question": "Which lesson did we learn the te-form?"
+  },
+  {
+    "id": "q21",
+    "topic": "lookup-topic-index-te-form-coverage",
+    "question": "Where does te-form appear in my materials?"
+  },
+  {
+    "id": "q22",
+    "topic": "lookup-topic-index-na-adjectives",
+    "question": "Which lesson introduces na-adjectives?"
+  },
+  {
+    "id": "q23",
+    "topic": "lookup-topic-index-wa-ga",
+    "question": "Where is は vs が explained?"
   }
 ]
