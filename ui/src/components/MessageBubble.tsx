@@ -7,9 +7,6 @@ interface Props {
 
 const HEBREW_RE = /[א-ת]/;
 
-// If text contains any Hebrew, treat the block as RTL.
-// The browser bidi algorithm then handles inline LTR segments
-// (romaji, English) correctly within the RTL flow.
 function dir(text: string): "rtl" | "ltr" {
   return HEBREW_RE.test(text) ? "rtl" : "ltr";
 }
@@ -22,7 +19,7 @@ export default function MessageBubble({ message }: Props) {
   return (
     <div className={`flex mb-4 ${isUser ? "justify-end" : "justify-start"}`}>
       {!isUser && (
-        <div className="w-7 h-7 rounded-full bg-indigo-700 flex items-center justify-center text-xs mr-2 mt-1 flex-shrink-0">
+        <div className="w-7 h-7 rounded-full bg-jp-accent dark:bg-indigo-700 flex items-center justify-center text-xs mr-2 mt-1 flex-shrink-0">
           🎌
         </div>
       )}
@@ -30,10 +27,10 @@ export default function MessageBubble({ message }: Props) {
       <div
         className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
           isUser
-            ? "bg-indigo-600 text-white rounded-br-sm"
+            ? "bg-jp-accent dark:bg-indigo-600 text-white rounded-br-sm"
             : isError
-            ? "bg-red-900/40 text-red-300 border border-red-800 rounded-bl-sm"
-            : "bg-gray-800 text-gray-100 rounded-bl-sm"
+            ? "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-800 rounded-bl-sm"
+            : "bg-jp-surface dark:bg-gray-800 text-jp-text dark:text-gray-100 border border-jp-border dark:border-transparent rounded-bl-sm"
         }`}
       >
         {isUser ? (
@@ -42,7 +39,7 @@ export default function MessageBubble({ message }: Props) {
           </p>
         ) : (
           <div
-            className="prose prose-invert prose-sm max-w-none"
+            className="prose dark:prose-invert prose-sm max-w-none"
             dir={textDir}
           >
             <ReactMarkdown>{message.content}</ReactMarkdown>
@@ -50,7 +47,7 @@ export default function MessageBubble({ message }: Props) {
         )}
         <p
           className={`text-[10px] mt-1.5 ${
-            isUser ? "text-indigo-300 text-right" : "text-gray-500"
+            isUser ? "text-red-200 dark:text-indigo-300 text-right" : "text-jp-faint dark:text-gray-500"
           }`}
         >
           {message.timestamp.toLocaleTimeString([], {

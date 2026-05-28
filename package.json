@@ -14,7 +14,9 @@
     "tauri:build": "npx tauri build",
     "eval:sensei": "npx ts-node src/eval/runSenseiEval.ts",
     "eval:critic": "npx ts-node src/eval/critic.ts",
-    "eval:fix-tasks": "npx ts-node src/eval/generateFixTasks.ts"
+    "eval:fix-tasks": "npx ts-node src/eval/generateFixTasks.ts",
+    "debug:topic": "npx ts-node src/debug/findTopicInChunks.ts",
+    "index:topics": "npx ts-node src/indexing/buildTopicIndex.ts"
   },
   "keywords": [],
   "author": "",

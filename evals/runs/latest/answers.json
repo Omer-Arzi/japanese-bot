@@ -3,90 +3,207 @@
     "id": "q01",
     "topic": "particles-wa-ga",
     "question": "What is the difference between は and が in Japanese?",
-    "answer": "は marks the **topic** of a sentence — what the sentence is about — while が marks the **subject** (the doer of the action) or **focus** (what is being emphasized).  \nJapanese (romaji) — translation  \nWatashi **ha** neko **ga** suki desu. — I (topic) like cats (subject).  \nKore **wa** hon **ga** arimasen. — This (topic) is not a book (subject).  \nKono ramen **ha** oishii desu. — This ramen (topic) is delicious.  \nSummary: は introduces what the sentence is about, while が highlights the subject or new information.",
+    "answer": "は marks the **topic** (what the sentence is about), while が marks the **subject** (the focus of the action or the thing being liked/disliked).  \nJapanese (romaji) — translation  \nWatashi wa neko ga suki desu. — I like cats. (Topic: \"I,\" subject: \"cats\")  \nNeko wa gohan wo tabemasu. — The cat eats food. (Topic: \"the cat,\" subject: \"the cat\")  \nKore wa hon desu. — This is a book. (Topic: \"this,\" subject: \"this\" in the sentence)  \nSummary: は introduces what the sentence is discussing, while が highlights the main actor or focus.",
     "retrievedChunks": [],
-    "timestamp": "2026-05-13T19:27:36.543Z",
-    "durationMs": 64989
+    "timestamp": "2026-05-27T13:46:08.750Z",
+    "durationMs": 100155
   },
   {
     "id": "q02",
     "topic": "te-form-exception",
     "question": "How do you form the te-form of いく (iku)? Is it regular?",
-    "answer": "The te-form of **いく (iku)** is **いって (itte)**. This is an **important exception** to the regular rule for \"ku\" verbs, which usually become **～いて (ite)**. For example:  \n- **書く (kaku)** → **書いて (kaitte)** (to write)  \n- **遊ぶ (asobu)** → **遊んで (asonde)** (to play)  \nHowever, **いく → いって** is irregular and must be memorized separately. Example:  \n**私（わたし）はスーパーにいってきます (Watashi wa suupaa ni itte kimasu)** — \"I will go to the supermarket.\"  \nThis exception is common in Japanese and appears in many expressions (e.g., **食べて (tabette)** for \"eating,\" **歩いて (ayunde)** for \"walking\").",
+    "answer": "The te-form of いく (iku) is いって (itte). This is an important exception to the regular pattern. Most く verbs (like かく → かいて, きく → きいて) change く to いて, but いく becomes いって. \nExample:  \n日本へいってきます — Nihon e itte kimasu (I will go to Japan).",
     "retrievedChunks": [],
-    "timestamp": "2026-05-13T19:28:15.289Z",
-    "durationMs": 38737
+    "timestamp": "2026-05-27T13:46:39.987Z",
+    "durationMs": 31229
   },
   {
     "id": "q03",
     "topic": "adjective-classification",
     "question": "Is きれい (kirei) an i-adjective or a na-adjective? How do you make it negative?",
-    "answer": "きれい (kirei) is a **na-adjective**, not an i-adjective. Even though it ends in い, it does **not** conjugate like an i-adjective. To make it negative, use:  \n**きれいじゃない** (casual) or **きれいではない** (formal).  \nExample:  \n\"この花はきれいじゃない\" — \"This flower is not beautiful.\"  \nNote: きれい is an important exception. Words ending in い are usually i-adjectives, but きれい and きらい (dislike) are na-adjectives.",
+    "answer": "きれい (kirei) is a **na-adjective**, not an i-adjective. Even though it ends in い, it does not conjugate like an i-adjective. To make it negative, use **きれいじゃない** (kirei janai) or **きれいではない** (kirei dewa nai).  \nExample:  \nこの花はきれいじゃない — This flower is not beautiful.",
     "retrievedChunks": [],
-    "timestamp": "2026-05-13T19:28:50.411Z",
-    "durationMs": 35120
+    "timestamp": "2026-05-27T13:47:07.232Z",
+    "durationMs": 27244
   },
   {
     "id": "q04",
     "topic": "particles-ni-de",
     "question": "What is the difference between に and で when talking about location?",
-    "answer": "に shows **destination** or **direction** (where something is going), while で shows **location** (where something happens or is done).  \n日本語 (nihongo) — I go to Japan.  \n学校 (gakkou) — I study **at** school.  \n家 (ie) — I eat **at** home.  \nに is about *where you're going*, and で is about *where the action happens*.",
+    "answer": "に indicates direction or destination, while で indicates the location where an action occurs.  \nJapanese (romaji) — translation  \n学校に行きます (gakkou ni ikimasu) — I go to school (destination).  \n学校で勉強します (gakkou de benkyou shimasu) — I study at school (location of action).  \nレストランでご飯を食べます (resutoran de gohan wo tabemasu) — I eat lunch at the restaurant (where the action happens).  \nに shows where something is going, and で shows where something is happening.",
     "retrievedChunks": [],
-    "timestamp": "2026-05-13T19:29:47.228Z",
-    "durationMs": 56815
+    "timestamp": "2026-05-27T13:47:59.752Z",
+    "durationMs": 52520
   },
   {
     "id": "q05",
     "topic": "particle-wo",
     "question": "What does the particle を (wo) mark in a sentence? Give an example.",
-    "answer": "The particle を (wo) marks the **direct object** of a verb — the thing being acted upon. It can mark a single item or an entire list of items when used with と (to) to connect nouns.  \nExample:  \n**ラーメンとぎょうざを食べます** (ra-men to gyouza wo tabemasu) — *I eat ramen and gyoza*  \nHere, を marks the whole list \"ラーメンとぎょうざ\" (ramen and gyoza) as the direct object of the verb 食べます (to eat).",
+    "answer": "The particle を (wo) marks the **direct object** of a verb — the thing being acted upon. It can mark a single item or an entire list when used with と.  \nExample:  \n**ラーメンとぎょうざを食べます** (ra-men to gyouza wo tabemasu) — *I eat ramen and gyoza.*  \nHere, を marks the whole list \"ramen and gyoza\" as the direct object of the verb 食べます (tabemasu, \"to eat\").",
     "retrievedChunks": [],
-    "timestamp": "2026-05-13T19:30:24.630Z",
-    "durationMs": 37400
+    "timestamp": "2026-05-27T13:48:31.460Z",
+    "durationMs": 31707
   },
   {
     "id": "q06",
     "topic": "past-tense",
     "question": "How do you form the past tense of a verb in polite Japanese? Give an example with たべます (tabemasu).",
-    "answer": "To form the past tense of a verb in polite Japanese, change **ます (masu)** to **ました (mashita)**.  \nExample:  \n**たべます (tabemasu)** — I eat (polite present)  \n→ **たべました (tabemashita)** — I ate (polite past)  \nSentence:  \n**ラーメンをたべました。** (Ra-men wo tabemashita.) — I ate ramen.  \n- **を (wo)** marks the direct object (ramen).  \n- **ました (mashita)** adds the past tense to the polite form.",
+    "answer": "To form the past tense of a verb in polite Japanese, change **-masu** to **-mashita**.  \nExample:  \n**たべます (tabemasu)** → **たべました (tabemashita)** — \"I ate\" (when talking about yourself).  \nNatural example:  \n**ワタシハ ゴハンヲ たべました (Watashi wa gohan o tabemashita)** — \"I ate rice.\"  \n- **は** marks the topic (\"I\"),  \n- **を** marks the direct object (\"rice\"),  \n- **たべました** is the polite past tense of \"to eat.\"",
     "retrievedChunks": [],
-    "timestamp": "2026-05-13T19:31:10.348Z",
-    "durationMs": 45718
+    "timestamp": "2026-05-27T13:49:14.455Z",
+    "durationMs": 42994
   },
   {
     "id": "q07",
     "topic": "negative-form",
     "question": "How do you make a verb negative in polite Japanese? Give an example with のみます (nomimasu).",
-    "answer": "To make a verb negative in polite Japanese, replace **-masu** with **-masen**.  \nExample:  \n**のみます (nomimasu)** — I drink (polite)  \n→ **のみません (nomimasen)** — I do not drink (polite)  \nThis applies to most verbs in the polite form.",
+    "answer": "To make a verb negative in polite Japanese, add **ません (masen)** to the verb's **stem**. For **のみます (nomimasu)** — the polite form of **飲む (nomu, \"to drink\")** — the negative is:  \n**飲みません (nomimasen)** — \"I do not drink.\"  \nThis follows the pattern: **[stem] + ません**. The stem of **飲む** is **飲**, so **飲 + ません = 飲みません**.",
     "retrievedChunks": [],
-    "timestamp": "2026-05-13T19:31:44.205Z",
-    "durationMs": 33854
+    "timestamp": "2026-05-27T13:49:52.090Z",
+    "durationMs": 37634
   },
   {
     "id": "q08",
     "topic": "particle-to",
     "question": "How is the particle と (to) used to list nouns? What is its role when used before を?",
-    "answer": "The particle **と** connects nouns into a list, similar to \"and\" in English. When used before **を**, **と** groups the listed nouns together, and **を** marks the entire list as the direct object of the verb. This is common in sentences where multiple items are acted upon together.\nJapanese (romaji) — translation  \nラーメンとぎょうざを食べます (ra-men to gyouza wo tabemasu) — I eat ramen and gyoza.  \n本と雑誌を読みます (hon to zasshi wo yomimasu) — I read books and magazines.  \n**と** connects nouns into a list, and **を** marks the whole list as the direct object.",
+    "answer": "The particle **と** connects nouns into a list, meaning \"and.\" When used before **を**, **を** marks the entire list as the direct object.  \nJapanese (romaji) — translation  \nラーメンとぎょうざを食べます (ra-men to gyouza wo tabemasu) — I eat ramen and gyoza.  \n日本語と英語を話します (nihon-go to eigo wo hanashimasu) — I speak Japanese and English.  \nSummary: **と** lists nouns, and **を** marks the whole list as the object.",
     "retrievedChunks": [],
-    "timestamp": "2026-05-13T19:32:42.207Z",
-    "durationMs": 58000
+    "timestamp": "2026-05-27T13:50:26.761Z",
+    "durationMs": 34670
   },
   {
     "id": "q09",
     "topic": "na-adjectives",
     "question": "How do na-adjectives work in Japanese? How do you use them before a noun and in a sentence ending?",
-    "answer": "Na-adjectives (like きれい \"kirei\" for \"beautiful\" or きらい \"kirai\" for \"dislike\") work differently from i-adjectives. Here’s how they function:\n**Before a noun**:  \nUse [na-adjective] + **な** + [noun].  \nExample: きれい**な**花 (kirei **na** hana) — \"beautiful flower.\"  \n(Notice な connects the adjective to the noun, unlike i-adjectives which use い.)\n**At the end of a sentence**:  \nUse [na-adjective] + **です** for affirmative statements.  \nExample: きれい**です** (kirei **desu**) — \"It’s beautiful.\"  \nFor negation:  \nUse [na-adjective] + **ではありません** (dewa arimasen).  \nExample: きれい**ではありません** (kirei dewa arimasen) — \"It’s not beautiful.\"  \n**Important note**:  \nWords like きれい and きらい end in い but are **na-adjectives**, not i-adjectives. They **do not** conjugate like i-adjectives (e.g., no ～く or ～かった forms). Always use **な** before nouns and **ではありません** for negation.",
+    "answer": "Na-adjectives (like きれい, kirei — \"beautiful\") are used differently from i-adjectives. Before a noun, they add **な** to connect to the noun:  \n**きれいな花** (kireina hanabira) — \"beautiful flower.\"  \nAt the end of a sentence, they remain unchanged and are followed by **です** for positive statements or **ではありません** for negatives:  \n**花はきれいです** (hon wa kirei desu) — \"The flower is beautiful.\"  \n**花はきれいではありません** (hon wa kirei dewa arimasen) — \"The flower is not beautiful.\"  \nKey note: Words ending in **い** are usually i-adjectives, but **きれい** and **きらい** (kirai — \"dislike\") are **na-adjectives**. They **do not** conjugate like i-adjectives (e.g., きれい is always きれい, not きれいか).",
     "retrievedChunks": [],
-    "timestamp": "2026-05-13T19:33:39.901Z",
-    "durationMs": 57692
+    "timestamp": "2026-05-27T13:51:54.796Z",
+    "durationMs": 88035
   },
   {
     "id": "q10",
     "topic": "te-form-regular",
     "question": "How do you form the te-form of かく (kaku)? What is the general pattern for く verbs?",
-    "answer": "The te-form of かく (kaku) is いて (kite). For most く verbs, the te-form is made by changing く to いて. This is the general pattern. However, いく (iku) is an important exception — it becomes いって (itte) instead of いて.  \nJapanese (romaji) — translation  \n彼は書いています (kare wa kite imasu) — He is writing.  \n学校に行きます (gakkou ni ikimasu) — I go to school.  \nMost く verbs follow the ～いて pattern, but いく becomes いって.",
+    "answer": "The te-form of かく (kaku, \"to write\") is **かいて** (kaite). Most く verbs follow the pattern **～いて** (～ite) in the te-form. However, **いく** (iku, \"to go\") is an important exception, becoming **いって** (itte) instead of *ite*.  \nJapanese (romaji) — translation  \nかいてください — kaite kudasai — Please write (polite request)  \nたべてください — tabete kudasai — Please eat (polite request)  \nSummary: Most く verbs become **～いて** in the te-form, but **いく** is an exception (→ **いって**).",
     "retrievedChunks": [],
-    "timestamp": "2026-05-13T19:34:20.854Z",
-    "durationMs": 40953
+    "timestamp": "2026-05-27T13:52:36.320Z",
+    "durationMs": 41522
+  },
+  {
+    "id": "q11",
+    "topic": "lookup-te-form",
+    "question": "In which lesson did we learn the て-form?",
+    "answer": "I couldn't find this in the indexed course materials.",
+    "retrievedChunks": [],
+    "timestamp": "2026-05-27T13:52:53.601Z",
+    "durationMs": 17278
+  },
+  {
+    "id": "q12",
+    "topic": "lookup-particles",
+    "question": "Where in the course materials do particles like は and が appear?",
+    "answer": "I couldn't find this in the indexed course materials.",
+    "retrievedChunks": [],
+    "timestamp": "2026-05-27T13:53:09.603Z",
+    "durationMs": 16000
+  },
+  {
+    "id": "q13",
+    "topic": "lookup-na-adjectives",
+    "question": "Did we already cover na-adjectives in class?",
+    "answer": "Lesson 10 — Japanese adjectives (けいようし) - Two adjective categories: i-adjectives - na-adjectives  \nLesson 11 — The particle な with na-adjectives",
+    "retrievedChunks": [],
+    "timestamp": "2026-05-27T13:53:37.612Z",
+    "durationMs": 28008
+  },
+  {
+    "id": "q14",
+    "topic": "lookup-past-tense",
+    "question": "What lesson covers the past tense of verbs?",
+    "answer": "Lesson 8 — The polite past tense: ました - Negative past tense: ませんでした",
+    "retrievedChunks": [],
+    "timestamp": "2026-05-27T13:54:07.767Z",
+    "durationMs": 30155
+  },
+  {
+    "id": "q15",
+    "topic": "lookup-negative",
+    "question": "Is the negative form of verbs explained somewhere in my course materials?",
+    "answer": "Lesson 2 — \"is not\"  \nLesson 5 — \"do not - does not - will not\"  \nLesson 8 — \"Negative past tense: ませんでした\"  \nLesson 9 — \"I do not drink beer and cola.\"  \nLesson 10 — \"Present Negative Forms\"  \nLesson 11 — \"do not really like\"",
+    "retrievedChunks": [],
+    "timestamp": "2026-05-27T13:54:42.385Z",
+    "durationMs": 34617
+  },
+  {
+    "id": "q16",
+    "topic": "lookup-te-form-lesson-number",
+    "question": "what is the lesson number we learned about the \"te\" form, from lesson 1-12?",
+    "answer": "I couldn't find this in the indexed course materials.",
+    "retrievedChunks": [],
+    "timestamp": "2026-05-27T13:55:02.271Z",
+    "durationMs": 19886
+  },
+  {
+    "id": "q17",
+    "topic": "lookup-teaching-te-form",
+    "question": "Which lesson did we learn the te-form in?",
+    "answer": "Lesson 12 — The Te-Form Foundation — [short quote from the text]",
+    "retrievedChunks": [],
+    "timestamp": "2026-05-27T13:55:22.707Z",
+    "durationMs": 20436
+  },
+  {
+    "id": "q18",
+    "topic": "lookup-teaching-te-form-coverage",
+    "question": "Did we already learn te-form in class?",
+    "answer": "Lesson 12 — The Te-Form Foundation — Requests - Permission - Prohibition - Gi…",
+    "retrievedChunks": [],
+    "timestamp": "2026-05-27T13:55:41.329Z",
+    "durationMs": 18622
+  },
+  {
+    "id": "q19",
+    "topic": "lookup-appearance-te-form",
+    "question": "Where does the te-form appear in the workbook?",
+    "answer": "The te-form appears in workbooks when learning about verb conjugation, sentence connections, and polite requests. For example, it is used in phrases like \"食べてください\" (kaite kudasai — \"please eat\") or \"食べてから出かけます\" (kaite kara dekakemasu — \"I will go out after eating\"). It is also introduced when explaining how to link actions (e.g., \"勉強して、テレビを見ます\" — benkyō shite, terebi o mimasu — \"I study and then watch TV\"). Workbooks often include exercises on forming the te-form and using it in daily conversation.",
+    "retrievedChunks": [],
+    "timestamp": "2026-05-27T13:56:23.525Z",
+    "durationMs": 42195
+  },
+  {
+    "id": "q20",
+    "topic": "lookup-topic-index-te-form-lesson",
+    "question": "Which lesson did we learn the te-form?",
+    "answer": "Lesson 12 — The Te-Form Foundation",
+    "retrievedChunks": [],
+    "timestamp": "2026-05-27T13:56:48.944Z",
+    "durationMs": 25418
+  },
+  {
+    "id": "q21",
+    "topic": "lookup-topic-index-te-form-coverage",
+    "question": "Where does te-form appear in my materials?",
+    "answer": "Lesson 5 — \"te-form\" is mentioned in the \"Advanced Preview\" section. (sourceType: LESSON EVIDENCE)  \nLesson 12 — \"The Te-Form Foundation\" is explicitly introduced. (sourceType: LESSON EVIDENCE)  \nGrammar Reference: \"て Form Compounds\" is discussed in the fundamentals.pdf. (sourceType: GRAMMAR REFERENCE)  \nIncidental: \"te form\" appears in a workbook table with examples like \"たべる → たべて\". (sourceType: INCIDENTAL APPEARANCES)  \nIncidental: Sentences like \"テレビでにほんのえいがをみました\" and \"ジムでヨガをしました\" use te-form contexts. (sourceType: INCIDENTAL APPEARANCES)  \nIncidental: \"te-form\" is listed in a workbook exercise table with verbs like \"食べる\" (たべる). (sourceType: INCIDENTAL APPEARANCES)",
+    "retrievedChunks": [],
+    "timestamp": "2026-05-27T13:57:57.082Z",
+    "durationMs": 68138
+  },
+  {
+    "id": "q22",
+    "topic": "lookup-topic-index-na-adjectives",
+    "question": "Which lesson introduces na-adjectives?",
+    "answer": "Lesson 10 — Japanese adjectives (けいようし) - Two adjective categories:   - i-adjectives   - na-adjectives...",
+    "retrievedChunks": [],
+    "timestamp": "2026-05-27T13:58:24.700Z",
+    "durationMs": 27618
+  },
+  {
+    "id": "q23",
+    "topic": "lookup-topic-index-wa-ga",
+    "question": "Where is は vs が explained?",
+    "answer": "The difference between は and が is explained in the context of **topic vs. subject**.  \n- **は** marks the **topic** (what the sentence is about), not necessarily the subject.  \n- **が** marks the **subject** (the actor or focus of the sentence).  \nExamples:  \n1. 私は猫が好きです (Watashi wa neko ga suki desu) — *I like cats* (topic is \"I,\" subject is \"cats\").  \n2. 猫が好きです (Neko ga suki desu) — *I like cats* (topic is omitted, subject is \"cats\").  \n3. これは本です (Kore wa hon desu) — *This is a book* (topic is \"this,\" subject is \"book\").  \nSummary: は introduces the topic, while が introduces the subject or focus.",
+    "retrievedChunks": [],
+    "timestamp": "2026-05-27T13:59:40.075Z",
+    "durationMs": 75375
   }
 ]
