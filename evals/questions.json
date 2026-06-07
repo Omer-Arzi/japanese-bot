@@ -113,5 +113,70 @@
     "id": "q23",
     "topic": "lookup-topic-index-wa-ga",
     "question": "Where is は vs が explained?"
+  },
+  {
+    "id": "q24",
+    "topic": "verb-group",
+    "question": "Is おきる (okiru) a Group 1 or Group 2 verb? Why?"
+  },
+  {
+    "id": "q25",
+    "topic": "verb-group-exception",
+    "question": "Is はいる (hairu) a Group 1 or Group 2 verb?"
+  },
+  {
+    "id": "q26",
+    "topic": "te-form-special",
+    "question": "What is the te-form of する?"
+  },
+  {
+    "id": "q27",
+    "topic": "te-form-special",
+    "question": "What is the te-form of くる?"
+  },
+  {
+    "id": "q28",
+    "topic": "aru-iru",
+    "question": "What is the difference between ある and いる?"
+  },
+  {
+    "id": "q29",
+    "topic": "aru-iru-example",
+    "question": "Should I use ある or いる for a cat?"
+  },
+  {
+    "id": "q30",
+    "topic": "suki-particle",
+    "question": "Which particle is normally used with すき?"
+  },
+  {
+    "id": "q31",
+    "topic": "suki-sentence",
+    "question": "How do you say 'I like sushi' in Japanese?"
+  },
+  {
+    "id": "q32",
+    "topic": "translation",
+    "question": "Translate: 'I drink coffee and tea.'"
+  },
+  {
+    "id": "q33",
+    "topic": "translation",
+    "question": "Translate: 'The library is quiet.'"
+  },
+  {
+    "id": "q34",
+    "topic": "lookup-synonym",
+    "question": "Where in our lessons is the negative verb form introduced?"
+  },
+  {
+    "id": "q35",
+    "topic": "lookup-synonym",
+    "question": "Which chapter first talks about na-adjectives?"
+  },
+  {
+    "id": "q36",
+    "topic": "lookup-synonym",
+    "question": "Do my materials explain the difference between は and が?"
   }
 ]

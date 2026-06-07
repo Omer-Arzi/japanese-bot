@@ -33,4 +33,8 @@ export const llm = {
   async embed(text: string): Promise<number[]> {
     return (await getProvider()).embed(text);
   },
+
+  async healthCheck(): Promise<void> {
+    return (await getProvider()).healthCheck();
+  },
 };

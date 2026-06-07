@@ -2,8 +2,9 @@ import * as fs from "fs";
 import * as path from "path";
 
 const PROJECT_DIR = path.join(__dirname, "..", "..");
-const ANSWERS_PATH = path.join(PROJECT_DIR, "evals", "runs", "latest", "answers.json");
-const REPORT_PATH = path.join(PROJECT_DIR, "evals", "runs", "latest", "critic_report.md");
+const IS_SMOKE = process.argv.includes("--smoke");
+const ANSWERS_PATH = path.join(PROJECT_DIR, "evals", "runs", "latest", IS_SMOKE ? "smoke_answers.json" : "answers.json");
+const REPORT_PATH = path.join(PROJECT_DIR, "evals", "runs", "latest", IS_SMOKE ? "smoke_critic_report.md" : "critic_report.md");
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -506,10 +507,50 @@ function checkPlaceholderText(answer: string): Finding {
 
 // ─── Lookup answer quality ────────────────────────────────────────────────────
 
+// Appearance-lookup signals: question asks where a topic appears in materials,
+// not which lesson formally taught it. These questions may validly answer without
+// a lesson number — workbook/exercise appearances are acceptable evidence.
+const APPEARANCE_QUESTION_PATTERNS: RegExp[] = [
+  /\bwhere\s+does\s+.{0,60}\bappear\b/i,
+  /\bwhere\s+(is|are)\s+.{0,60}\b(mentioned|used|found|referenced)\b/i,
+  /\bin\s+(the\s+)?workbook\b/i,
+  /\bin\s+(the\s+)?exercises?\b/i,
+  /\bwhere\s+.{0,30}\bappears?\b/i,
+  // Yes/no coverage questions — a content-bearing yes/no answer is sufficient; no lesson number needed.
+  /\bdo\s+(?:my|your|the|our)\s+materials?\b/i,
+  /\bdid\s+we\s+(?:already\s+)?(?:cover|learn|study|go\s+over)\b/i,
+  /\bis\s+.{0,60}\bexplained\s+somewhere\b/i,
+  /\bdoes\s+(?:my|your|the|our)\s+(?:course|material|workbook|textbook)\b/i,
+];
+
+// Signals that a lookup answer has concrete material evidence.
+// Accepted for appearance lookups even when no lesson number is present.
+const MATERIAL_EVIDENCE_PATTERNS: RegExp[] = [
+  /\bworkbook\b/i,
+  /\bexercise[s]?\b/i,
+  /\bchunk\b/i,
+  /\bsource(?:Type|File)?\b/i,
+  /\bincidental\b/i,
+  /\bgrammar[\s-]reference\b/i,
+  /\bexcerpt\b/i,
+  /\bsection\b/i,
+  /\bappears?\s+in\b/i,
+  /\bfound\s+in\b/i,
+  /\bmentioned\s+in\b/i,
+  /\b(?:your|my|the|our)\s+materials?\b/i,
+  /\b(?:your|my|the|our)\s+(?:course|workbook|textbook|notes)\b/i,
+];
+
 // Only runs for questions with topic starting "lookup-".
-// FAIL if answer uses general knowledge phrases (typically, usually, in most courses...)
-// FAIL if answer contains neither a lesson number nor the prescribed fallback sentence.
-function checkLookupAnswerQuality(topic: string, answer: string): Finding {
+// Two sub-rules depending on question type:
+//
+//   A. Lesson-location lookup ("which lesson", "lesson number", "where did we learn"):
+//      FAIL if answer has neither a lesson number nor the fallback sentence.
+//
+//   B. Appearance lookup ("where does X appear", "in the workbook"):
+//      PASS if answer has a lesson number, fallback, OR concrete material evidence.
+//      (Workbook appearances legitimately have no lesson number.)
+function checkLookupAnswerQuality(topic: string, question: string, answer: string): Finding {
   const SKIP: Finding = { check: "lookup-answer-quality", passed: true };
   if (!topic.startsWith("lookup-")) return SKIP;
 
@@ -537,21 +578,106 @@ function checkLookupAnswerQuality(topic: string, answer: string): Finding {
     };
   }
 
-  // Must have at least a lesson number OR the fallback sentence
-  const hasLessonNumber = /\blesson\s+\d+\b/i.test(answer);
-  const hasFallback = /couldn['']t\s+find|could\s+not\s+find|לא\s+מצאתי/i.test(answer);
+  const hasLessonNumber   = /\blesson\s+\d+\b/i.test(answer);
+  const hasFallback       = /couldn['']t\s+(?:find|map|locate|identify)|could\s+not\s+(?:find|map|locate|identify)|לא\s+מצאתי/i.test(answer);
+  const isAppearanceQuery = APPEARANCE_QUESTION_PATTERNS.some((re) => re.test(question));
+  const hasMaterialEvidence = MATERIAL_EVIDENCE_PATTERNS.some((re) => re.test(answer));
 
+  if (isAppearanceQuery) {
+    // For appearance queries, lesson number OR material evidence OR fallback is acceptable.
+    if (!hasLessonNumber && !hasMaterialEvidence && !hasFallback) {
+      return {
+        check: "lookup-answer-quality",
+        passed: false,
+        excerpt: excerpt(answer, /^.{0,120}/m),
+        detail:
+          "Appearance-lookup answer contains no lesson number, no material evidence (workbook/chunk/excerpt/section), and no fallback sentence",
+        likelyCause:
+          "Model gave a general grammar explanation instead of reporting where the topic appears in the indexed materials",
+        suggestedFix:
+          'Check that LOOKUP_PATTERNS and APPEARANCE_PATTERNS in ask.ts match this question. The answer should reference source materials (workbook, excerpt, section) not explain the grammar topic.',
+      };
+    }
+    return SKIP;
+  }
+
+  // Lesson-location query: must have a lesson number or the fallback sentence.
   if (!hasLessonNumber && !hasFallback) {
     return {
       check: "lookup-answer-quality",
       passed: false,
       excerpt: excerpt(answer, /^.{0,120}/m),
       detail:
-        "Lookup answer contains neither a lesson number nor the fallback sentence",
+        "Lesson-location lookup answer contains neither a lesson number nor the fallback sentence",
       likelyCause:
         'Model ignored lookup mode and gave a general grammar explanation. Check that "Mode: lookup" appears in ask-sensei diagnostics.',
       suggestedFix:
         'Re-run with the exact question and check stdout for "Mode: lookup | Retrieval-only: YES". If it shows a different mode, add the missing phrase to LOOKUP_PATTERNS in ask.ts.',
+    };
+  }
+
+  return SKIP;
+}
+
+// Only runs for lookup-topic questions that are "materials-coverage" style
+// (e.g. "Do my materials explain X?", "Is X in my course?").
+// Fails if the answer gives a standalone grammar explanation without a real
+// material/lesson citation — i.e. the model escaped retrieval-only mode.
+const MATERIALS_COVERAGE_PATTERNS: RegExp[] = [
+  /\bdo\s+(?:my|your|the|our)\s+materials?\s+(?:explain|cover|contain|include|mention)\b/i,
+  /\bdoes\s+(?:my|your|the|our)\s+(?:course|workbook|textbook|material)\s+(?:explain|cover|contain|include|mention)\b/i,
+  /\bdo\s+(?:my|your|the|our)\s+(?:course\s+)?materials?\b/i,
+];
+
+// Signals a real source citation (stricter than MATERIAL_EVIDENCE_PATTERNS —
+// "your materials" alone is just a question paraphrase, not a citation).
+const SOURCE_CITATION_PATTERNS: RegExp[] = [
+  /\blesson\s+\d+\b/i,
+  /\bin\s+(the\s+)?workbook\b/i,
+  /\bin\s+(the\s+)?exercises?\b/i,
+  /\bfound\s+in\b/i,
+  /\bappears?\s+in\b/i,
+  /\bmentioned\s+in\b/i,
+  /\bsection\b/i,
+  /\bexcerpt\b/i,
+  /\bgrammar[\s-]reference\b/i,
+];
+
+// Signals that an answer is giving a grammar lesson rather than citing sources.
+// Patterns are written to match through markdown bold/italic markers (**text**).
+const GRAMMAR_TEACHING_PATTERNS: RegExp[] = [
+  /\bmarks?\s+the\s+\*{0,2}(topic|subject|object|direct\s+object)\b/i,
+  /\bis\s+used\s+to\s+mark\b/i,
+  /\bindicates?\s+the\s+\*{0,2}(topic|subject|direct\s+object)\b/i,
+  /\b(は|が|を|に|で|と)\s+\*{0,2}marks?\b/i,
+  /\bpronounced\s+"(wa|ga|wo|ni|de|to)"\s+when\s+used\s+as\s+a\s+particle\b/i,
+  /\bhere'?s?\s+the\s+correct\s+explanation\b/i,
+];
+
+function checkLookupTeachingEscape(topic: string, question: string, answer: string): Finding {
+  const SKIP: Finding = { check: "lookup-teaching-escape", passed: true };
+
+  if (!topic.startsWith("lookup-")) return SKIP;
+
+  const isCoverageQuestion = MATERIALS_COVERAGE_PATTERNS.some((re) => re.test(question));
+  if (!isCoverageQuestion) return SKIP;
+
+  const hasSourceCitation  = SOURCE_CITATION_PATTERNS.some((re) => re.test(answer));
+  const hasFallback        = /couldn['']t\s+(?:find|map|locate|identify)|could\s+not\s+(?:find|map|locate)|לא\s+מצאתי/i.test(answer);
+  const hasTeachingEscape  = GRAMMAR_TEACHING_PATTERNS.some((re) => re.test(answer));
+
+  // Teaching escape: answer explains grammar but cites no real material source.
+  if (hasTeachingEscape && !hasSourceCitation && !hasFallback) {
+    return {
+      check: "lookup-teaching-escape",
+      passed: false,
+      excerpt: excerpt(answer, GRAMMAR_TEACHING_PATTERNS.find((re) => re.test(answer))!),
+      detail:
+        "Materials-coverage lookup answer gives a grammar explanation without citing any lesson or material source",
+      likelyCause:
+        'Model was not in lookup/retrieval-only mode. Check that "Mode: lookup | Retrieval-only: YES" appears in ask-sensei diagnostics.',
+      suggestedFix:
+        "Add the question pattern to LOOKUP_PATTERNS in src/ask.ts so the question routes to lookup mode.",
     };
   }
 
@@ -588,7 +714,8 @@ function critiqueOne(result: EvalResult): QuestionReport {
     checkMixedLanguageGarbage(result.answer),
     checkRomajiAccuracy(result.answer),
     checkPlaceholderText(result.answer),
-    checkLookupAnswerQuality(result.topic, result.answer),
+    checkLookupAnswerQuality(result.topic, result.question, result.answer),
+    checkLookupTeachingEscape(result.topic, result.question, result.answer),
   ];
 
   const status = findings.every((f) => f.passed) ? "PASS" : "FAIL";
@@ -706,7 +833,7 @@ function main(): void {
   const answers: EvalResult[] = JSON.parse(fs.readFileSync(ANSWERS_PATH, "utf-8"));
   const runTimestamp = answers[0]?.timestamp ?? "unknown";
 
-  console.log(`Critiquing ${answers.length} answers...`);
+  console.log(`Critiquing ${answers.length} answers${IS_SMOKE ? " [smoke]" : ""}...`);
 
   const reports = answers.map(critiqueOne);
   const report = formatReport(reports, runTimestamp);

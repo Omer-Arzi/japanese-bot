@@ -1,11 +1,15 @@
 import * as fs from "fs";
 import * as path from "path";
 import { spawn } from "child_process";
+import { loadConfig } from "../llm/config";
 
 const PROJECT_DIR = path.join(__dirname, "..", "..");
 const QUESTIONS_PATH = path.join(PROJECT_DIR, "evals", "questions.json");
+const SMOKE_IDS_PATH = path.join(PROJECT_DIR, "evals", "smoke-ids.json");
 const OUTPUT_DIR = path.join(PROJECT_DIR, "evals", "runs", "latest");
-const OUTPUT_PATH = path.join(OUTPUT_DIR, "answers.json");
+
+const IS_SMOKE = process.argv.includes("--smoke");
+const OUTPUT_PATH = path.join(OUTPUT_DIR, IS_SMOKE ? "smoke_answers.json" : "answers.json");
 
 // Timeout per question in ms (LLM calls can be slow)
 const QUESTION_TIMEOUT_MS = 5 * 60 * 1000;
@@ -107,14 +111,49 @@ function extractChunks(stdout: string): ChunkInfo[] {
   return chunks;
 }
 
+async function checkLlmHealth(): Promise<void> {
+  const cfg = await loadConfig();
+  const isOllama = cfg.provider === "ollama";
+  const base = cfg.baseUrl.replace(/\/v1\/?$/, "");
+  const url = isOllama ? `${base}/api/tags` : `${base}/health`;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes("ECONNREFUSED") || msg.includes("fetch failed") || msg.includes("ENOTFOUND")) {
+      const hint = isOllama
+        ? `Ollama is not running.\n  Start it with: ollama serve\n  Expected at: ${base}`
+        : `vLLM server is not running.\n  Expected at: ${base}`;
+      console.error(`\n✗  ${hint}\n`);
+      process.exit(1);
+    }
+    throw err;
+  }
+}
+
 async function runEval(): Promise<void> {
   if (!fs.existsSync(QUESTIONS_PATH)) {
     console.error("Questions file not found:", QUESTIONS_PATH);
     process.exit(1);
   }
 
-  const questions: Question[] = JSON.parse(fs.readFileSync(QUESTIONS_PATH, "utf-8"));
-  console.log(`Running eval for ${questions.length} questions...\n`);
+  await checkLlmHealth();
+
+  let questions: Question[] = JSON.parse(fs.readFileSync(QUESTIONS_PATH, "utf-8"));
+
+  if (IS_SMOKE) {
+    if (!fs.existsSync(SMOKE_IDS_PATH)) {
+      console.error("Smoke IDs file not found:", SMOKE_IDS_PATH);
+      process.exit(1);
+    }
+    const smokeIds: string[] = JSON.parse(fs.readFileSync(SMOKE_IDS_PATH, "utf-8"));
+    const smokeSet = new Set(smokeIds);
+    questions = questions.filter((q) => smokeSet.has(q.id));
+    console.log(`[smoke] Running ${questions.length}/${smokeIds.length} questions...\n`);
+  } else {
+    console.log(`Running eval for ${questions.length} questions...\n`);
+  }
 
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 

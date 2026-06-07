@@ -2,8 +2,9 @@ import * as fs from "fs";
 import * as path from "path";
 
 const PROJECT_DIR = path.join(__dirname, "..", "..");
-const REPORT_PATH = path.join(PROJECT_DIR, "evals", "runs", "latest", "critic_report.md");
-const OUTPUT_PATH = path.join(PROJECT_DIR, "evals", "runs", "latest", "fix_tasks.md");
+const IS_SMOKE = process.argv.includes("--smoke");
+const REPORT_PATH = path.join(PROJECT_DIR, "evals", "runs", "latest", IS_SMOKE ? "smoke_critic_report.md" : "critic_report.md");
+const OUTPUT_PATH = path.join(PROJECT_DIR, "evals", "runs", "latest", IS_SMOKE ? "smoke_fix_tasks.md" : "fix_tasks.md");
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -141,6 +142,8 @@ function filesForCheck(check: string): string[] {
     "to-vs-wo":                  ["src/ask.ts (GRAMMAR_ACCURACY_RULES)", "src/eval/critic.ts (checkToVsWo)"],
     "empty-parentheses":         ["src/ask.ts (cleanOutput)", "src/eval/critic.ts (checkEmptyParens)"],
     "weird-numbering":           ["src/ask.ts (cleanOutput)", "src/eval/critic.ts (checkWeirdNumbering)"],
+    "lookup-answer-quality":     ["src/ask.ts (LOOKUP_PATTERNS)", "src/eval/critic.ts (checkLookupAnswerQuality)"],
+    "lookup-teaching-escape":    ["src/ask.ts (LOOKUP_PATTERNS)", "src/eval/critic.ts (checkLookupTeachingEscape, GRAMMAR_TEACHING_PATTERNS)"],
   };
   return map[check] ?? ["src/ask.ts", "src/eval/critic.ts"];
 }
