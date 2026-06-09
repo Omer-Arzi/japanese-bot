@@ -12,6 +12,8 @@ export interface LlmProvider {
   chat(messages: ChatMessage[], options?: ChatOptions): Promise<string>;
   chatStream(messages: ChatMessage[], options?: ChatOptions): AsyncGenerator<string>;
   embed(text: string): Promise<number[]>;
+  // Throws a descriptive error if the server is unreachable.
+  healthCheck(): Promise<void>;
 }
 
 export interface LlmConfig {

@@ -3,172 +3,832 @@
     "id": "q01",
     "topic": "particles-wa-ga",
     "question": "What is the difference between は and が in Japanese?",
-    "answer": "は marks the **topic** (what the sentence is about), while が marks the **subject** (the focus of the action or the thing being liked/disliked).  \nJapanese (romaji) — translation  \nWatashi wa neko ga suki desu. — I like cats. (Topic: \"I,\" subject: \"cats\")  \nNeko wa gohan wo tabemasu. — The cat eats food. (Topic: \"the cat,\" subject: \"the cat\")  \nKore wa hon desu. — This is a book. (Topic: \"this,\" subject: \"this\" in the sentence)  \nSummary: は introduces what the sentence is discussing, while が highlights the main actor or focus.",
-    "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:46:08.750Z",
-    "durationMs": 100155
+    "answer": "は marks the **topic** of the sentence — what the sentence is about. It is not always the subject. が marks the **subject** or the focus of the sentence, especially when emphasizing who or what is doing something.  \nJapanese (romaji) — translation  \nWatashi wa Kimura Rihi desu — I am Kimura Rihi (introducing the topic \"I\").  \nWatashi ga Kimura Rihi desu — I am Kimura Rihi (emphasizing that \"I\" am the subject).  \nSummary: は introduces the topic, while が highlights the subject or focus.",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-01-introduction-and-greetings-14",
+        "sourceType": "summary",
+        "lessonNumber": 1,
+        "score": 0.767
+      },
+      {
+        "chunkId": "lesson-02-basic-sentence-structure-9",
+        "sourceType": "summary",
+        "lessonNumber": 2,
+        "score": 0.7627
+      },
+      {
+        "chunkId": "lesson-02-basic-sentence-structure-24",
+        "sourceType": "summary",
+        "lessonNumber": 2,
+        "score": 0.7093
+      },
+      {
+        "chunkId": "lesson-02-basic-sentence-structure-7",
+        "sourceType": "summary",
+        "lessonNumber": 2,
+        "score": 0.6988
+      },
+      {
+        "chunkId": "lesson-02-basic-sentence-structure-8",
+        "sourceType": "summary",
+        "lessonNumber": 2,
+        "score": 0.6956
+      },
+      {
+        "chunkId": "lesson-01-introduction-and-greetings-12",
+        "sourceType": "summary",
+        "lessonNumber": 1,
+        "score": 0.6837
+      },
+      {
+        "chunkId": "lesson-01-9",
+        "sourceType": "lesson",
+        "lessonNumber": 1,
+        "score": 0.6508
+      },
+      {
+        "chunkId": "marugoto-vocab-2",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.6315
+      }
+    ],
+    "timestamp": "2026-06-07T10:55:42.213Z",
+    "durationMs": 118099
   },
   {
     "id": "q02",
     "topic": "te-form-exception",
     "question": "How do you form the te-form of いく (iku)? Is it regular?",
-    "answer": "The te-form of いく (iku) is いって (itte). This is an important exception to the regular pattern. Most く verbs (like かく → かいて, きく → きいて) change く to いて, but いく becomes いって. \nExample:  \n日本へいってきます — Nihon e itte kimasu (I will go to Japan).",
-    "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:46:39.987Z",
-    "durationMs": 31229
+    "answer": "The te-form of いく (iku) is いって (itte), not いいて (iite). This is an important exception to the regular rule for u-verbs ending in う. Most u-verbs change the final う to って (e.g., かく → かいて), but いく is irregular and becomes いって. \nExample:  \n行く (iku) — いって (itte) — \"to go\" (te-form).  \nThis exception is critical for beginners to remember.",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-12-te-form-foundation-6",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7511
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-11",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.749
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-9",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7278
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-10",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7246
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-12",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7244
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-17",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7243
+      },
+      {
+        "chunkId": "lesson-10-2",
+        "sourceType": "lesson",
+        "lessonNumber": 10,
+        "score": 0.6881
+      },
+      {
+        "chunkId": "marugoto-vocab-53",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.6879
+      }
+    ],
+    "timestamp": "2026-06-07T10:56:17.033Z",
+    "durationMs": 34811
   },
   {
     "id": "q03",
     "topic": "adjective-classification",
     "question": "Is きれい (kirei) an i-adjective or a na-adjective? How do you make it negative?",
-    "answer": "きれい (kirei) is a **na-adjective**, not an i-adjective. Even though it ends in い, it does not conjugate like an i-adjective. To make it negative, use **きれいじゃない** (kirei janai) or **きれいではない** (kirei dewa nai).  \nExample:  \nこの花はきれいじゃない — This flower is not beautiful.",
-    "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:47:07.232Z",
-    "durationMs": 27244
+    "answer": "きれい (kirei) is a **na-adjective**, not an i-adjective. Even though it ends in い, it follows na-adjective rules.  \nTo make it negative:  \n**きれいじゃないです** (kirei janai desu) — \"is not beautiful/clean.\"  \nExample:  \n- この部屋はきれいです。→ This room is clean.  \n- この部屋はきれいじゃないです。→ This room is not clean.  \n**Note**: Na-adjectives use **じゃない/ではありません** for negative forms, not **くないです** (which is for i-adjectives). This is a key exception!",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-10-adjectives-5",
+        "sourceType": "summary",
+        "lessonNumber": 10,
+        "score": 0.8002
+      },
+      {
+        "chunkId": "lesson-10-adjectives-25",
+        "sourceType": "summary",
+        "lessonNumber": 10,
+        "score": 0.7804
+      },
+      {
+        "chunkId": "lesson-10-adjectives-10",
+        "sourceType": "summary",
+        "lessonNumber": 10,
+        "score": 0.7698
+      },
+      {
+        "chunkId": "lesson-10-adjectives-36",
+        "sourceType": "summary",
+        "lessonNumber": 10,
+        "score": 0.7635
+      },
+      {
+        "chunkId": "lesson-10-adjectives-0",
+        "sourceType": "summary",
+        "lessonNumber": 10,
+        "score": 0.7367
+      },
+      {
+        "chunkId": "lesson-10-adjectives-2",
+        "sourceType": "summary",
+        "lessonNumber": 10,
+        "score": 0.7235
+      },
+      {
+        "chunkId": "lesson-10-2",
+        "sourceType": "lesson",
+        "lessonNumber": 10,
+        "score": 0.669
+      },
+      {
+        "chunkId": "marugoto-vocab-20",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.6192
+      }
+    ],
+    "timestamp": "2026-06-07T10:56:58.445Z",
+    "durationMs": 41410
   },
   {
     "id": "q04",
     "topic": "particles-ni-de",
     "question": "What is the difference between に and で when talking about location?",
-    "answer": "に indicates direction or destination, while で indicates the location where an action occurs.  \nJapanese (romaji) — translation  \n学校に行きます (gakkou ni ikimasu) — I go to school (destination).  \n学校で勉強します (gakkou de benkyou shimasu) — I study at school (location of action).  \nレストランでご飯を食べます (resutoran de gohan wo tabemasu) — I eat lunch at the restaurant (where the action happens).  \nに shows where something is going, and で shows where something is happening.",
-    "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:47:59.752Z",
-    "durationMs": 52520
+    "answer": "The particles **に** and **で** both relate to location but have different roles:  \n- **に** marks **destination** or **direction** (where something is going).  \n- **で** marks the **location where an action happens** (the setting of the action).  \nExamples:  \n1. 東京**に**行きます (Tokyo **ni** ikimasu) — I go **to** Tokyo (direction/destination).  \n2. 東京**で**買い物します (Tokyo **de** kaimono shimasu) — I shop **in** Tokyo (location of the action).  \n3. カフェ**で**コーヒーを飲みます (Kafe **de** koohii **wo** nomimasu) — I drink coffee **at** a café (where the action occurs).  \n**Summary:** Use **に** for *going to* a place, and **で** for *doing something* at a place.",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-06-time-and-location-particles-18",
+        "sourceType": "summary",
+        "lessonNumber": 6,
+        "score": 0.7298
+      },
+      {
+        "chunkId": "lesson-06-time-and-location-particles-19",
+        "sourceType": "summary",
+        "lessonNumber": 6,
+        "score": 0.722
+      },
+      {
+        "chunkId": "lesson-07-direction-and-invitations-9",
+        "sourceType": "summary",
+        "lessonNumber": 7,
+        "score": 0.7038
+      },
+      {
+        "chunkId": "lesson-07-direction-and-invitations-6",
+        "sourceType": "summary",
+        "lessonNumber": 7,
+        "score": 0.6881
+      },
+      {
+        "chunkId": "lesson-07-direction-and-invitations-3",
+        "sourceType": "summary",
+        "lessonNumber": 7,
+        "score": 0.6714
+      },
+      {
+        "chunkId": "lesson-07-direction-and-invitations-0",
+        "sourceType": "summary",
+        "lessonNumber": 7,
+        "score": 0.6703
+      },
+      {
+        "chunkId": "lesson-07-2",
+        "sourceType": "lesson",
+        "lessonNumber": 7,
+        "score": 0.5718
+      },
+      {
+        "chunkId": "marugoto-vocab-22",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.5762
+      }
+    ],
+    "timestamp": "2026-06-07T10:57:48.104Z",
+    "durationMs": 49656
   },
   {
     "id": "q05",
     "topic": "particle-wo",
     "question": "What does the particle を (wo) mark in a sentence? Give an example.",
-    "answer": "The particle を (wo) marks the **direct object** of a verb — the thing being acted upon. It can mark a single item or an entire list when used with と.  \nExample:  \n**ラーメンとぎょうざを食べます** (ra-men to gyouza wo tabemasu) — *I eat ramen and gyoza.*  \nHere, を marks the whole list \"ramen and gyoza\" as the direct object of the verb 食べます (tabemasu, \"to eat\").",
-    "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:48:31.460Z",
-    "durationMs": 31707
+    "answer": "The particle を (wo) marks the **direct object** — the thing receiving the action in a sentence.  \nExample:  \nJapanese: わたしはピザをたべます (Watashi wa piza wo tabemasu) — I eat pizza.  \nHere, **ピザを** (piza wo) shows what is being eaten (the direct object).",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-19",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.7893
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-21",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.7833
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-0",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.7427
+      },
+      {
+        "chunkId": "lesson-06-time-and-location-particles-9",
+        "sourceType": "summary",
+        "lessonNumber": 6,
+        "score": 0.7231
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-20",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.7224
+      },
+      {
+        "chunkId": "lesson-06-time-and-location-particles-16",
+        "sourceType": "summary",
+        "lessonNumber": 6,
+        "score": 0.7177
+      },
+      {
+        "chunkId": "lesson-05-7",
+        "sourceType": "lesson",
+        "lessonNumber": 5,
+        "score": 0.6489
+      },
+      {
+        "chunkId": "marugoto-vocab-55",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.6168
+      }
+    ],
+    "timestamp": "2026-06-07T10:58:33.878Z",
+    "durationMs": 45771
   },
   {
     "id": "q06",
     "topic": "past-tense",
     "question": "How do you form the past tense of a verb in polite Japanese? Give an example with たべます (tabemasu).",
-    "answer": "To form the past tense of a verb in polite Japanese, change **-masu** to **-mashita**.  \nExample:  \n**たべます (tabemasu)** → **たべました (tabemashita)** — \"I ate\" (when talking about yourself).  \nNatural example:  \n**ワタシハ ゴハンヲ たべました (Watashi wa gohan o tabemashita)** — \"I ate rice.\"  \n- **は** marks the topic (\"I\"),  \n- **を** marks the direct object (\"rice\"),  \n- **たべました** is the polite past tense of \"to eat.\"",
-    "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:49:14.455Z",
-    "durationMs": 42994
+    "answer": "To form the polite past tense of a verb in Japanese, change **ます** to **ました**.  \nExample:  \n**たべます** (tabemasu) — I eat / will eat  \n→ **たべました** (tabemashita) — I ate / He/She ate  \nThis is the standard rule for polite verb past tense.",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-31",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.7588
+      },
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-14",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.7242
+      },
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-18",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.7218
+      },
+      {
+        "chunkId": "lesson-06-time-and-location-particles-23",
+        "sourceType": "summary",
+        "lessonNumber": 6,
+        "score": 0.7213
+      },
+      {
+        "chunkId": "lesson-08-frequency-and-past-tense-19",
+        "sourceType": "summary",
+        "lessonNumber": 8,
+        "score": 0.7187
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-5",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.71
+      },
+      {
+        "chunkId": "lesson-05-3",
+        "sourceType": "lesson",
+        "lessonNumber": 5,
+        "score": 0.6971
+      },
+      {
+        "chunkId": "marugoto-vocab-46",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.6577
+      }
+    ],
+    "timestamp": "2026-06-07T10:59:20.381Z",
+    "durationMs": 46500
   },
   {
     "id": "q07",
     "topic": "negative-form",
     "question": "How do you make a verb negative in polite Japanese? Give an example with のみます (nomimasu).",
-    "answer": "To make a verb negative in polite Japanese, add **ません (masen)** to the verb's **stem**. For **のみます (nomimasu)** — the polite form of **飲む (nomu, \"to drink\")** — the negative is:  \n**飲みません (nomimasen)** — \"I do not drink.\"  \nThis follows the pattern: **[stem] + ません**. The stem of **飲む** is **飲**, so **飲 + ません = 飲みません**.",
-    "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:49:52.090Z",
-    "durationMs": 37634
+    "answer": "To make a verb negative in polite Japanese, add **ません** to the verb stem.  \nExample with **のみます** (to drink):  \n**コーヒーをのみません** — I do not drink coffee.  \n**Note**: ません is polite and neutral, often softer than English \"do not.\" It works with all verb types (ru-verbs, u-verbs, etc.).",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-16",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.764
+      },
+      {
+        "chunkId": "lesson-08-frequency-and-past-tense-3",
+        "sourceType": "summary",
+        "lessonNumber": 8,
+        "score": 0.7559
+      },
+      {
+        "chunkId": "lesson-11-adjective-noun-and-suki-25",
+        "sourceType": "summary",
+        "lessonNumber": 11,
+        "score": 0.7414
+      },
+      {
+        "chunkId": "lesson-08-frequency-and-past-tense-16",
+        "sourceType": "summary",
+        "lessonNumber": 8,
+        "score": 0.735
+      },
+      {
+        "chunkId": "lesson-02-basic-sentence-structure-21",
+        "sourceType": "summary",
+        "lessonNumber": 2,
+        "score": 0.7222
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-18",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.7221
+      },
+      {
+        "chunkId": "lesson-05-6",
+        "sourceType": "lesson",
+        "lessonNumber": 5,
+        "score": 0.6567
+      },
+      {
+        "chunkId": "marugoto-vocab-46",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.6211
+      }
+    ],
+    "timestamp": "2026-06-07T11:00:03.126Z",
+    "durationMs": 42742
   },
   {
     "id": "q08",
     "topic": "particle-to",
     "question": "How is the particle と (to) used to list nouns? What is its role when used before を?",
-    "answer": "The particle **と** connects nouns into a list, meaning \"and.\" When used before **を**, **を** marks the entire list as the direct object.  \nJapanese (romaji) — translation  \nラーメンとぎょうざを食べます (ra-men to gyouza wo tabemasu) — I eat ramen and gyoza.  \n日本語と英語を話します (nihon-go to eigo wo hanashimasu) — I speak Japanese and English.  \nSummary: **と** lists nouns, and **を** marks the whole list as the object.",
-    "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:50:26.761Z",
-    "durationMs": 34670
+    "answer": "The particle **と** connects nouns into a complete list, meaning \"and.\" When used before **を**, **を** marks the entire list as the direct object.  \nJapanese (romaji) — translation  \nラーメンとぎょうざを食べます (ra-men to gyouza wo tabemasu) — I eat ramen and gyoza.  \nねこといぬをみます (neko to inu wo mimasu) — I see a cat and a dog.  \n**と** creates a specific list, and **を** treats the whole group as one object.",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-0",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.7578
+      },
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-4",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.7564
+      },
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-2",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.7499
+      },
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-1",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.7476
+      },
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-6",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.7447
+      },
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-8",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.7426
+      },
+      {
+        "chunkId": "lesson-05-3",
+        "sourceType": "lesson",
+        "lessonNumber": 5,
+        "score": 0.6264
+      },
+      {
+        "chunkId": "marugoto-vocab-55",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.6022
+      }
+    ],
+    "timestamp": "2026-06-07T11:00:49.619Z",
+    "durationMs": 46491
   },
   {
     "id": "q09",
     "topic": "na-adjectives",
     "question": "How do na-adjectives work in Japanese? How do you use them before a noun and in a sentence ending?",
-    "answer": "Na-adjectives (like きれい, kirei — \"beautiful\") are used differently from i-adjectives. Before a noun, they add **な** to connect to the noun:  \n**きれいな花** (kireina hanabira) — \"beautiful flower.\"  \nAt the end of a sentence, they remain unchanged and are followed by **です** for positive statements or **ではありません** for negatives:  \n**花はきれいです** (hon wa kirei desu) — \"The flower is beautiful.\"  \n**花はきれいではありません** (hon wa kirei dewa arimasen) — \"The flower is not beautiful.\"  \nKey note: Words ending in **い** are usually i-adjectives, but **きれい** and **きらい** (kirai — \"dislike\") are **na-adjectives**. They **do not** conjugate like i-adjectives (e.g., きれい is always きれい, not きれいか).",
-    "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:51:54.796Z",
-    "durationMs": 88035
+    "answer": "Na-adjectives in Japanese are used differently from i-adjectives. Here's how they work:\n**Before a noun:**\n- Add **な** between the na-adjective and the noun.  \n  Example:  \n  きれい**な**花 (kirei **na** hana) — \"beautiful flower\"  \n  げんき**な**ひと (genki **na** hito) — \"energetic person\"\n**In sentence endings:**\n- Use **です/ではありません** (desu/janai) for statements and negatives.  \n  あの花はきれい**です** (ano hana wa kirei **desu**) — \"That flower is beautiful.\"  \n  あの花はきれい**ではありません** (ano hana wa kirei **janai**) — \"That flower is not beautiful.\"\n**Key note:**  \nNa-adjectives **do not change their own form** like i-adjectives (e.g., あつい → あつかった). Instead, they rely on **です/ではありません/でした** for tense and politeness.  \n- あの場所は静か**です** (shizuka **desu**) — \"That place is quiet.\"  \n- あの場所は静か**でした** (shizuka **deshita**) — \"That place was quiet.\"  \nNa-adjectives like きれい (kirei) and げんき (genki) are **noun-like** in behavior, requiring **な** before nouns and **です/ではありません** for sentence endings.",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-10-adjectives-4",
+        "sourceType": "summary",
+        "lessonNumber": 10,
+        "score": 0.8063
+      },
+      {
+        "chunkId": "lesson-11-adjective-noun-and-suki-5",
+        "sourceType": "summary",
+        "lessonNumber": 11,
+        "score": 0.7954
+      },
+      {
+        "chunkId": "lesson-10-adjectives-32",
+        "sourceType": "summary",
+        "lessonNumber": 10,
+        "score": 0.7826
+      },
+      {
+        "chunkId": "lesson-11-adjective-noun-and-suki-7",
+        "sourceType": "summary",
+        "lessonNumber": 11,
+        "score": 0.7768
+      },
+      {
+        "chunkId": "lesson-11-adjective-noun-and-suki-1",
+        "sourceType": "summary",
+        "lessonNumber": 11,
+        "score": 0.7673
+      },
+      {
+        "chunkId": "lesson-10-adjectives-40",
+        "sourceType": "summary",
+        "lessonNumber": 10,
+        "score": 0.7593
+      },
+      {
+        "chunkId": "lesson-11-0",
+        "sourceType": "lesson",
+        "lessonNumber": 11,
+        "score": 0.6818
+      },
+      {
+        "chunkId": "marugoto-vocab-46",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.6178
+      }
+    ],
+    "timestamp": "2026-06-07T11:02:02.025Z",
+    "durationMs": 72404
   },
   {
     "id": "q10",
     "topic": "te-form-regular",
     "question": "How do you form the te-form of かく (kaku)? What is the general pattern for く verbs?",
-    "answer": "The te-form of かく (kaku, \"to write\") is **かいて** (kaite). Most く verbs follow the pattern **～いて** (～ite) in the te-form. However, **いく** (iku, \"to go\") is an important exception, becoming **いって** (itte) instead of *ite*.  \nJapanese (romaji) — translation  \nかいてください — kaite kudasai — Please write (polite request)  \nたべてください — tabete kudasai — Please eat (polite request)  \nSummary: Most く verbs become **～いて** in the te-form, but **いく** is an exception (→ **いって**).",
-    "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:52:36.320Z",
-    "durationMs": 41522
+    "answer": "The te-form of かく (kaku) is かいて (kaite). Most く verbs follow a general pattern where the final く changes to いて in the te-form. However, there are important exceptions: いく (iku) becomes いって (itte), and くる (kuru) becomes きて (kite).  \nJapanese (romaji) — translation  \nかいてみます (kaite mimasu) — I will try writing.  \nいってきます (itte kimasu) — I will go and come back.  \nThe te-form for most く verbs is ～いて, but いく and くる are irregular.",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-12-te-form-foundation-11",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7737
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-6",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.752
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-17",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7411
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-7",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7357
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-4",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7301
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-9",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7228
+      },
+      {
+        "chunkId": "lesson-10-2",
+        "sourceType": "lesson",
+        "lessonNumber": 10,
+        "score": 0.6639
+      },
+      {
+        "chunkId": "marugoto-vocab-53",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.6557
+      }
+    ],
+    "timestamp": "2026-06-07T11:03:01.923Z",
+    "durationMs": 59896
   },
   {
     "id": "q11",
     "topic": "lookup-te-form",
     "question": "In which lesson did we learn the て-form?",
-    "answer": "I couldn't find this in the indexed course materials.",
-    "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:52:53.601Z",
-    "durationMs": 17278
+    "answer": "Lesson 12 — The て form is one of the MOST IMPORTANT grammar systems in Japanese.",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-01-introduction-and-greetings-0",
+        "sourceType": "summary",
+        "lessonNumber": 1,
+        "score": 0.6521
+      },
+      {
+        "chunkId": "lesson-02-basic-sentence-structure-20",
+        "sourceType": "summary",
+        "lessonNumber": 2,
+        "score": 0.6669
+      },
+      {
+        "chunkId": "lesson-03-possession-and-demonstratives-0",
+        "sourceType": "summary",
+        "lessonNumber": 3,
+        "score": 0.6824
+      },
+      {
+        "chunkId": "lesson-04-kono-and-place-demonstratives-0",
+        "sourceType": "summary",
+        "lessonNumber": 4,
+        "score": 0.6697
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-0",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.6692
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-31",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.7275
+      },
+      {
+        "chunkId": "lesson-06-time-and-location-particles-26",
+        "sourceType": "summary",
+        "lessonNumber": 6,
+        "score": 0.7022
+      },
+      {
+        "chunkId": "lesson-06-time-and-location-particles-0",
+        "sourceType": "summary",
+        "lessonNumber": 6,
+        "score": 0.6421
+      },
+      {
+        "chunkId": "lesson-07-direction-and-invitations-0",
+        "sourceType": "summary",
+        "lessonNumber": 7,
+        "score": 0.6389
+      },
+      {
+        "chunkId": "lesson-08-frequency-and-past-tense-0",
+        "sourceType": "summary",
+        "lessonNumber": 8,
+        "score": 0.6484
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-0",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7645
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-51",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7121
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-1",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.711
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-48",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7016
+      }
+    ],
+    "timestamp": "2026-06-07T11:03:38.521Z",
+    "durationMs": 36595
   },
   {
     "id": "q12",
     "topic": "lookup-particles",
     "question": "Where in the course materials do particles like は and が appear?",
-    "answer": "I couldn't find this in the indexed course materials.",
+    "answer": "Lesson 2 — は does not always equal the grammatical subject  \nLesson 9 — Particle | Feeling | は | topic | が | thing being identified/focused",
     "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:53:09.603Z",
-    "durationMs": 16000
+    "timestamp": "2026-06-07T11:04:00.019Z",
+    "durationMs": 21496
   },
   {
     "id": "q13",
     "topic": "lookup-na-adjectives",
     "question": "Did we already cover na-adjectives in class?",
-    "answer": "Lesson 10 — Japanese adjectives (けいようし) - Two adjective categories: i-adjectives - na-adjectives  \nLesson 11 — The particle な with na-adjectives",
+    "answer": "Lesson 10 — Two adjective categories: i-adjectives and na-adjectives",
     "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:53:37.612Z",
-    "durationMs": 28008
+    "timestamp": "2026-06-07T11:05:42.042Z",
+    "durationMs": 102023
   },
   {
     "id": "q14",
     "topic": "lookup-past-tense",
     "question": "What lesson covers the past tense of verbs?",
-    "answer": "Lesson 8 — The polite past tense: ました - Negative past tense: ませんでした",
+    "answer": "Lesson 8 — The polite past tense: ました  \nLesson 8 — Negative past tense: ませんでした  \nLesson 8 — Talking about past actions",
     "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:54:07.767Z",
-    "durationMs": 30155
+    "timestamp": "2026-06-07T11:06:13.798Z",
+    "durationMs": 31754
   },
   {
     "id": "q15",
     "topic": "lookup-negative",
     "question": "Is the negative form of verbs explained somewhere in my course materials?",
-    "answer": "Lesson 2 — \"is not\"  \nLesson 5 — \"do not - does not - will not\"  \nLesson 8 — \"Negative past tense: ませんでした\"  \nLesson 9 — \"I do not drink beer and cola.\"  \nLesson 10 — \"Present Negative Forms\"  \nLesson 11 — \"do not really like\"",
+    "answer": "Lesson 2 — Negative Sentences  \nLesson 5 — Negative Verb Form  \nLesson 9 — I do not drink beer and cola  \nLesson 10 — Present Negative Forms  \nLesson 11 — Negative Suki Expressions  \nLesson 12 — てはいけません",
     "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:54:42.385Z",
-    "durationMs": 34617
+    "timestamp": "2026-06-07T11:06:56.182Z",
+    "durationMs": 42381
   },
   {
     "id": "q16",
     "topic": "lookup-te-form-lesson-number",
     "question": "what is the lesson number we learned about the \"te\" form, from lesson 1-12?",
-    "answer": "I couldn't find this in the indexed course materials.",
-    "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:55:02.271Z",
-    "durationMs": 19886
+    "answer": "Lesson 12 — The Te-Form Foundation",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-02-basic-sentence-structure-20",
+        "sourceType": "summary",
+        "lessonNumber": 2,
+        "score": 0.658
+      },
+      {
+        "chunkId": "lesson-02-basic-sentence-structure-0",
+        "sourceType": "summary",
+        "lessonNumber": 2,
+        "score": 0.6429
+      },
+      {
+        "chunkId": "lesson-03-possession-and-demonstratives-0",
+        "sourceType": "summary",
+        "lessonNumber": 3,
+        "score": 0.6557
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-31",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.7432
+      },
+      {
+        "chunkId": "lesson-06-time-and-location-particles-0",
+        "sourceType": "summary",
+        "lessonNumber": 6,
+        "score": 0.6477
+      },
+      {
+        "chunkId": "lesson-08-frequency-and-past-tense-0",
+        "sourceType": "summary",
+        "lessonNumber": 8,
+        "score": 0.6507
+      },
+      {
+        "chunkId": "lesson-11-adjective-noun-and-suki-0",
+        "sourceType": "summary",
+        "lessonNumber": 11,
+        "score": 0.6375
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-0",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.8293
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-51",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7593
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-18",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7081
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-11",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.6965
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-5",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.6963
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-48",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.6955
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-7",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.6933
+      }
+    ],
+    "timestamp": "2026-06-07T11:07:36.841Z",
+    "durationMs": 40656
   },
   {
     "id": "q17",
     "topic": "lookup-teaching-te-form",
     "question": "Which lesson did we learn the te-form in?",
-    "answer": "Lesson 12 — The Te-Form Foundation — [short quote from the text]",
+    "answer": "Lesson 12 — The Te-Form Foundation",
     "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:55:22.707Z",
-    "durationMs": 20436
+    "timestamp": "2026-06-07T11:07:59.848Z",
+    "durationMs": 23004
   },
   {
     "id": "q18",
     "topic": "lookup-teaching-te-form-coverage",
     "question": "Did we already learn te-form in class?",
-    "answer": "Lesson 12 — The Te-Form Foundation — Requests - Permission - Prohibition - Gi…",
+    "answer": "Lesson 12 — The Te-Form Foundation",
     "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:55:41.329Z",
-    "durationMs": 18622
+    "timestamp": "2026-06-07T11:08:19.556Z",
+    "durationMs": 19708
   },
   {
     "id": "q19",
     "topic": "lookup-appearance-te-form",
     "question": "Where does the te-form appear in the workbook?",
-    "answer": "The te-form appears in workbooks when learning about verb conjugation, sentence connections, and polite requests. For example, it is used in phrases like \"食べてください\" (kaite kudasai — \"please eat\") or \"食べてから出かけます\" (kaite kara dekakemasu — \"I will go out after eating\"). It is also introduced when explaining how to link actions (e.g., \"勉強して、テレビを見ます\" — benkyō shite, terebi o mimasu — \"I study and then watch TV\"). Workbooks often include exercises on forming the te-form and using it in daily conversation.",
+    "answer": "Incidental: te-form  \nIncidental: te form  \nIncidental: te-form exercise",
     "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:56:23.525Z",
-    "durationMs": 42195
+    "timestamp": "2026-06-07T11:09:03.025Z",
+    "durationMs": 43468
   },
   {
     "id": "q20",
@@ -176,34 +836,690 @@
     "question": "Which lesson did we learn the te-form?",
     "answer": "Lesson 12 — The Te-Form Foundation",
     "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:56:48.944Z",
-    "durationMs": 25418
+    "timestamp": "2026-06-07T11:09:26.584Z",
+    "durationMs": 23559
   },
   {
     "id": "q21",
     "topic": "lookup-topic-index-te-form-coverage",
     "question": "Where does te-form appear in my materials?",
-    "answer": "Lesson 5 — \"te-form\" is mentioned in the \"Advanced Preview\" section. (sourceType: LESSON EVIDENCE)  \nLesson 12 — \"The Te-Form Foundation\" is explicitly introduced. (sourceType: LESSON EVIDENCE)  \nGrammar Reference: \"て Form Compounds\" is discussed in the fundamentals.pdf. (sourceType: GRAMMAR REFERENCE)  \nIncidental: \"te form\" appears in a workbook table with examples like \"たべる → たべて\". (sourceType: INCIDENTAL APPEARANCES)  \nIncidental: Sentences like \"テレビでにほんのえいがをみました\" and \"ジムでヨガをしました\" use te-form contexts. (sourceType: INCIDENTAL APPEARANCES)  \nIncidental: \"te-form\" is listed in a workbook exercise table with verbs like \"食べる\" (たべる). (sourceType: INCIDENTAL APPEARANCES)",
+    "answer": "Lesson 5 — te-form  \nLesson 12 — The Te-Form Foundation  \nGRAMMAR REFERENCE: て Form Compounds  \nINCIDENTAL APPEARANCES: te form",
     "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:57:57.082Z",
-    "durationMs": 68138
+    "timestamp": "2026-06-07T11:10:29.665Z",
+    "durationMs": 63080
   },
   {
     "id": "q22",
     "topic": "lookup-topic-index-na-adjectives",
     "question": "Which lesson introduces na-adjectives?",
-    "answer": "Lesson 10 — Japanese adjectives (けいようし) - Two adjective categories:   - i-adjectives   - na-adjectives...",
+    "answer": "Lesson 10 — Two adjective categories:   - i-adjectives   - na-adjectives",
     "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:58:24.700Z",
-    "durationMs": 27618
+    "timestamp": "2026-06-07T11:10:57.350Z",
+    "durationMs": 27683
   },
   {
     "id": "q23",
     "topic": "lookup-topic-index-wa-ga",
     "question": "Where is は vs が explained?",
-    "answer": "The difference between は and が is explained in the context of **topic vs. subject**.  \n- **は** marks the **topic** (what the sentence is about), not necessarily the subject.  \n- **が** marks the **subject** (the actor or focus of the sentence).  \nExamples:  \n1. 私は猫が好きです (Watashi wa neko ga suki desu) — *I like cats* (topic is \"I,\" subject is \"cats\").  \n2. 猫が好きです (Neko ga suki desu) — *I like cats* (topic is omitted, subject is \"cats\").  \n3. これは本です (Kore wa hon desu) — *This is a book* (topic is \"this,\" subject is \"book\").  \nSummary: は introduces the topic, while が introduces the subject or focus.",
+    "answer": "Lesson 2 — は does not always equal the grammatical subject. It marks: - what the sentence is about  \nLesson 9 — | Particle | Feeling | |---|---| | は | topic | | が | thing being identified/focused |",
     "retrievedChunks": [],
-    "timestamp": "2026-05-27T13:59:40.075Z",
-    "durationMs": 75375
+    "timestamp": "2026-06-07T11:11:24.724Z",
+    "durationMs": 27371
+  },
+  {
+    "id": "q24",
+    "topic": "verb-group",
+    "question": "Is おきる (okiru) a Group 1 or Group 2 verb? Why?",
+    "answer": "おきる (okiru) is a Group 2 verb (ru-verb) because it ends with **る**. Group 2 verbs are called **ru-verbs** and always end in **る** in their dictionary form. Examples include **たべる** (taberu, to eat) and **みる** (miru, to see).  \nEven though some Group 1 verbs (u-verbs) like **かえる** (kaeru, to return) also end with **る**, they are classified as Group 1 because their dictionary form ends with **える** (a u-verb ending).  \n**Summary**: おきる is a Group 2 verb because it ends with **る**, not **える**.",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-8",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.6497
+      },
+      {
+        "chunkId": "lesson-07-direction-and-invitations-7",
+        "sourceType": "summary",
+        "lessonNumber": 7,
+        "score": 0.6434
+      },
+      {
+        "chunkId": "lesson-06-time-and-location-particles-23",
+        "sourceType": "summary",
+        "lessonNumber": 6,
+        "score": 0.6425
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-0",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.6384
+      },
+      {
+        "chunkId": "lesson-11-adjective-noun-and-suki-18",
+        "sourceType": "summary",
+        "lessonNumber": 11,
+        "score": 0.6285
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-11",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.6274
+      },
+      {
+        "chunkId": "lesson-08-5",
+        "sourceType": "lesson",
+        "lessonNumber": 8,
+        "score": 0.6221
+      },
+      {
+        "chunkId": "marugoto-vocab-20",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.6096
+      }
+    ],
+    "timestamp": "2026-06-07T11:12:28.570Z",
+    "durationMs": 63846
+  },
+  {
+    "id": "q25",
+    "topic": "verb-group-exception",
+    "question": "Is はいる (hairu) a Group 1 or Group 2 verb?",
+    "answer": "はいる (hairu) is a **Group 1 (u-verb)**, not a Group 2 (ru-verb), despite ending in る. This is an important exception.  \n**Example conjugation**:  \n- Dictionary form: はいる (hairu) — to enter  \n- Te-form: はいって (haitte) — similar to u-verbs like いく (iku) → いって (itte)  \nMost verbs ending in る are ru-verbs (Group 2), but はいる follows u-verb conjugation patterns.",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-10",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.6428
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-9",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.6402
+      },
+      {
+        "chunkId": "lesson-06-time-and-location-particles-23",
+        "sourceType": "summary",
+        "lessonNumber": 6,
+        "score": 0.6389
+      },
+      {
+        "chunkId": "lesson-07-direction-and-invitations-7",
+        "sourceType": "summary",
+        "lessonNumber": 7,
+        "score": 0.6383
+      },
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-18",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.6345
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-0",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.6335
+      },
+      {
+        "chunkId": "lesson-05-3",
+        "sourceType": "lesson",
+        "lessonNumber": 5,
+        "score": 0.647
+      },
+      {
+        "chunkId": "marugoto-vocab-23",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.6213
+      }
+    ],
+    "timestamp": "2026-06-07T11:13:21.448Z",
+    "durationMs": 52878
+  },
+  {
+    "id": "q26",
+    "topic": "te-form-special",
+    "question": "What is the te-form of する?",
+    "answer": "The te-form of **する** (to do) is **して**. This is an irregular verb, so it doesn't follow the standard te-form rules.  \nJapanese (romaji) — translation  \nしましょう (shimashou) — let's do  \nしました (shimashita) — did  \nSummary: する becomes して in the te-form, and is an important exception to regular te-form patterns.",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-12-te-form-foundation-6",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7664
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-17",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7525
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-4",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7252
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-9",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7145
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-11",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.713
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-16",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7118
+      },
+      {
+        "chunkId": "lesson-08-7",
+        "sourceType": "lesson",
+        "lessonNumber": 8,
+        "score": 0.5972
+      },
+      {
+        "chunkId": "marugoto-vocab-4",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.5572
+      }
+    ],
+    "timestamp": "2026-06-07T11:13:55.827Z",
+    "durationMs": 34379
+  },
+  {
+    "id": "q27",
+    "topic": "te-form-special",
+    "question": "What is the te-form of くる?",
+    "answer": "The te-form of くる is **きて**. This is an irregular exception — most く verbs become ～いて, but くる changes to きて instead of いって.  \nJapanese (romaji) — translation  \nねこがきてください (neko ga kite kudasai) — Please come, cat.  \nともだちがきてうれしい (tomodachi ga kite ureshii) — I'm happy when friends come.  \nSummary: くる → きて (irregular te-form).",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-12-te-form-foundation-6",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7604
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-17",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7347
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-4",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7204
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-11",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7201
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-9",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7059
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-5",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.7054
+      },
+      {
+        "chunkId": "lesson-08-7",
+        "sourceType": "lesson",
+        "lessonNumber": 8,
+        "score": 0.6084
+      },
+      {
+        "chunkId": "marugoto-vocab-53",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.593
+      }
+    ],
+    "timestamp": "2026-06-07T11:14:29.893Z",
+    "durationMs": 34066
+  },
+  {
+    "id": "q28",
+    "topic": "aru-iru",
+    "question": "What is the difference between ある and いる?",
+    "answer": "The difference between **ある (aru)** and **いる (iru)** is based on whether the subject is **living** or **non-living**.  \n- **いる** is used for **living things** (people, animals, pets).  \n- **ある** is used for **non-living things** (objects, places, abstract concepts).  \nJapanese (romaji) — translation  \nWatashi no neko ga ie ni imasu — My cat is in the house (living thing + いる).  \nWatashi no ie ga kyoufu desu — My house is clean (non-living thing + ある).  \nKoko ni gakko ga arimasu — There is a school here (non-living thing + ある).  \nSummary: **いる = living things; ある = non-living things.**",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-23",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.6565
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-12",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.6483
+      },
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-22",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.6427
+      },
+      {
+        "chunkId": "lesson-10-adjectives-6",
+        "sourceType": "summary",
+        "lessonNumber": 10,
+        "score": 0.637
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-10",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.6315
+      },
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-18",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.6305
+      },
+      {
+        "chunkId": "lesson-05-3",
+        "sourceType": "lesson",
+        "lessonNumber": 5,
+        "score": 0.5935
+      },
+      {
+        "chunkId": "marugoto-vocab-55",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.5867
+      }
+    ],
+    "timestamp": "2026-06-07T11:15:40.593Z",
+    "durationMs": 70700
+  },
+  {
+    "id": "q29",
+    "topic": "aru-iru-example",
+    "question": "Should I use ある or いる for a cat?",
+    "answer": "Use **いる** for a cat because it is a living being.  \nExample:  \nネコ**が**います — \"There is a cat.\"  \n**いる** is used for people, animals, and other living things. **ある** is used for non-living objects (e.g., テレビがあります — \"There is a TV\").",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-22",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.6773
+      },
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-29",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.6729
+      },
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-21",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.6382
+      },
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-23",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.6281
+      },
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-31",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.6241
+      },
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-34",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.6228
+      },
+      {
+        "chunkId": "lesson-08-4",
+        "sourceType": "lesson",
+        "lessonNumber": 8,
+        "score": 0.6038
+      },
+      {
+        "chunkId": "marugoto-vocab-55",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.6282
+      }
+    ],
+    "timestamp": "2026-06-07T11:16:16.720Z",
+    "durationMs": 36127
+  },
+  {
+    "id": "q30",
+    "topic": "suki-particle",
+    "question": "Which particle is normally used with すき?",
+    "answer": "The particle が (ga) is normally used with すき (suki).  \nExample: リンゴがすきです (ringo ga suki desu) — \"I like apples.\"  \nHere, が marks the thing being liked (the subject of the \"liking\" state).",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-11-adjective-noun-and-suki-34",
+        "sourceType": "summary",
+        "lessonNumber": 11,
+        "score": 0.7305
+      },
+      {
+        "chunkId": "lesson-11-adjective-noun-and-suki-18",
+        "sourceType": "summary",
+        "lessonNumber": 11,
+        "score": 0.7293
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-15",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.6663
+      },
+      {
+        "chunkId": "lesson-06-time-and-location-particles-23",
+        "sourceType": "summary",
+        "lessonNumber": 6,
+        "score": 0.6586
+      },
+      {
+        "chunkId": "lesson-02-basic-sentence-structure-4",
+        "sourceType": "summary",
+        "lessonNumber": 2,
+        "score": 0.658
+      },
+      {
+        "chunkId": "lesson-11-adjective-noun-and-suki-17",
+        "sourceType": "summary",
+        "lessonNumber": 11,
+        "score": 0.6529
+      },
+      {
+        "chunkId": "lesson-11-2",
+        "sourceType": "lesson",
+        "lessonNumber": 11,
+        "score": 0.6474
+      },
+      {
+        "chunkId": "marugoto-vocab-48",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.6239
+      }
+    ],
+    "timestamp": "2026-06-07T11:16:53.284Z",
+    "durationMs": 36564
+  },
+  {
+    "id": "q31",
+    "topic": "suki-sentence",
+    "question": "How do you say 'I like sushi' in Japanese?",
+    "answer": "Japanese: 寿司が好きです (Sushi ga suki desu) — I like sushi.  \nThe structure uses **が** to mark the object being liked (sushi) and **好きです** (suki desu) to express the feeling of liking. This follows the pattern: **[noun] が 好きです** (\"I like [noun]\").",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-11-adjective-noun-and-suki-22",
+        "sourceType": "summary",
+        "lessonNumber": 11,
+        "score": 0.7984
+      },
+      {
+        "chunkId": "lesson-11-adjective-noun-and-suki-18",
+        "sourceType": "summary",
+        "lessonNumber": 11,
+        "score": 0.7115
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-24",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.7078
+      },
+      {
+        "chunkId": "lesson-04-kono-and-place-demonstratives-25",
+        "sourceType": "summary",
+        "lessonNumber": 4,
+        "score": 0.7001
+      },
+      {
+        "chunkId": "lesson-11-adjective-noun-and-suki-33",
+        "sourceType": "summary",
+        "lessonNumber": 11,
+        "score": 0.6951
+      },
+      {
+        "chunkId": "lesson-11-adjective-noun-and-suki-31",
+        "sourceType": "summary",
+        "lessonNumber": 11,
+        "score": 0.6909
+      },
+      {
+        "chunkId": "lesson-07-2",
+        "sourceType": "lesson",
+        "lessonNumber": 7,
+        "score": 0.7344
+      },
+      {
+        "chunkId": "marugoto-vocab-13",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.6811
+      }
+    ],
+    "timestamp": "2026-06-07T11:17:33.249Z",
+    "durationMs": 39965
+  },
+  {
+    "id": "q32",
+    "topic": "translation",
+    "question": "Translate: 'I drink coffee and tea.'",
+    "answer": "Japanese (romaji) — I drink coffee and tea.  \n私はコーヒーとお茶を飲みます。  \n- **コーヒー (koohii)** = coffee  \n- **お茶 (ocha)** = tea  \n- **を (wo)** marks the entire list (coffee and tea) as the direct object.  \n- **と (to)** connects the two nouns into a list.  \n- **飲みます (nomimasu)** = drink (polite form).  \nThis follows the rule: **object comes before the verb**, and **を marks the whole list as the direct object**.",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-24",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.6696
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-22",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.6635
+      },
+      {
+        "chunkId": "lesson-03-possession-and-demonstratives-15",
+        "sourceType": "summary",
+        "lessonNumber": 3,
+        "score": 0.6576
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-27",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.6562
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-45",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.6542
+      },
+      {
+        "chunkId": "lesson-11-adjective-noun-and-suki-20",
+        "sourceType": "summary",
+        "lessonNumber": 11,
+        "score": 0.6542
+      },
+      {
+        "chunkId": "lesson-07-2",
+        "sourceType": "lesson",
+        "lessonNumber": 7,
+        "score": 0.6768
+      },
+      {
+        "chunkId": "marugoto-vocab-53",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.6233
+      }
+    ],
+    "timestamp": "2026-06-07T11:18:34.757Z",
+    "durationMs": 61508
+  },
+  {
+    "id": "q33",
+    "topic": "translation",
+    "question": "Translate: 'The library is quiet.'",
+    "answer": "Japanese: 図書館は静かです。  \nRomaji: Toshokan wa shizuka desu. — The library is quiet.",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-12-te-form-foundation-46",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.6823
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-21",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.6022
+      },
+      {
+        "chunkId": "lesson-09-to-and-existence-verbs-32",
+        "sourceType": "summary",
+        "lessonNumber": 9,
+        "score": 0.5717
+      },
+      {
+        "chunkId": "lesson-06-time-and-location-particles-20",
+        "sourceType": "summary",
+        "lessonNumber": 6,
+        "score": 0.5703
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-25",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.5675
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-40",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.5651
+      },
+      {
+        "chunkId": "lesson-05-7",
+        "sourceType": "lesson",
+        "lessonNumber": 5,
+        "score": 0.5293
+      },
+      {
+        "chunkId": "marugoto-vocab-41",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.5552
+      }
+    ],
+    "timestamp": "2026-06-07T11:19:08.328Z",
+    "durationMs": 33571
+  },
+  {
+    "id": "q34",
+    "topic": "lookup-synonym",
+    "question": "Where in our lessons is the negative verb form introduced?",
+    "answer": "The negative verb form is introduced in **Lesson 5** (lesson-05-verbs-and-wo-particle.md). It explains the use of **ません** as the polite negative form for verbs, meaning \"do not,\" \"does not,\" or \"will not.\"",
+    "retrievedChunks": [
+      {
+        "chunkId": "lesson-02-basic-sentence-structure-20",
+        "sourceType": "summary",
+        "lessonNumber": 2,
+        "score": 0.7633
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-16",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.7065
+      },
+      {
+        "chunkId": "lesson-12-te-form-foundation-51",
+        "sourceType": "summary",
+        "lessonNumber": 12,
+        "score": 0.6942
+      },
+      {
+        "chunkId": "lesson-10-adjectives-10",
+        "sourceType": "summary",
+        "lessonNumber": 10,
+        "score": 0.6906
+      },
+      {
+        "chunkId": "lesson-06-time-and-location-particles-26",
+        "sourceType": "summary",
+        "lessonNumber": 6,
+        "score": 0.6854
+      },
+      {
+        "chunkId": "lesson-05-verbs-and-wo-particle-31",
+        "sourceType": "summary",
+        "lessonNumber": 5,
+        "score": 0.6828
+      },
+      {
+        "chunkId": "lesson-05-3",
+        "sourceType": "lesson",
+        "lessonNumber": 5,
+        "score": 0.5621
+      },
+      {
+        "chunkId": "marugoto-vocab-54",
+        "sourceType": "vocab",
+        "lessonNumber": null,
+        "score": 0.5156
+      }
+    ],
+    "timestamp": "2026-06-07T11:19:34.694Z",
+    "durationMs": 26366
+  },
+  {
+    "id": "q35",
+    "topic": "lookup-synonym",
+    "question": "Which chapter first talks about na-adjectives?",
+    "answer": "Lesson 10 — Two adjective categories:   - i-adjectives   - na-adjectives",
+    "retrievedChunks": [],
+    "timestamp": "2026-06-07T11:20:03.088Z",
+    "durationMs": 28393
+  },
+  {
+    "id": "q36",
+    "topic": "lookup-synonym",
+    "question": "Do my materials explain the difference between は and が?",
+    "answer": "Lesson 2 — は does not always equal the grammatical subject  \nLesson 9 — は topic | が thing being identified/focused",
+    "retrievedChunks": [],
+    "timestamp": "2026-06-07T11:20:23.169Z",
+    "durationMs": 20081
   }
 ]

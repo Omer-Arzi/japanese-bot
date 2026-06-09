@@ -1,10 +1,12 @@
 import * as fs from "fs";
 import * as path from "path";
 import { llm } from "./llm/LlmService";
+import { loadConfig } from "./llm/config";
+import { appendChatLog, detectFollowUp, getLastEntry } from "./chat-logger";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type QuestionMode = "practice" | "explanation" | "planning" | "lookup";
+type QuestionMode = "practice" | "explanation" | "planning" | "lookup" | "curriculum";
 type GrammarIntent = "explanation" | "analysis" | "correction" | "general";
 type Difficulty = "easy" | "medium" | "hard";
 
@@ -14,8 +16,9 @@ const MODE_KEYWORDS: Record<QuestionMode, string[]> = {
   practice:    ["practice", "drill", "exercise", "quiz", "write", "fill", "repeat", "תרגיל", "תרגול"],
   planning:    ["plan", "schedule", "syllabus"],
   explanation: ["explain", "what is", "how does", "meaning"],
-  // lookup detection is handled by detectLookupIntent() — keywords unused
+  // lookup and curriculum detection are handled by their own functions — keywords unused
   lookup:      [],
+  curriculum:  [],
 };
 
 const INTENT_KEYWORDS: Record<GrammarIntent, string[]> = {
@@ -60,8 +63,9 @@ const MIX: Record<QuestionMode, Record<string, number>> = {
   practice:    { summary: 5, lesson: 1, vocab: 1, workbook: 1, genki: 0, unknown: 0 },
   explanation: { summary: 6, lesson: 1, vocab: 1, workbook: 0, genki: 0, unknown: 0 },
   planning:    { summary: 5, lesson: 1, vocab: 1, workbook: 1, genki: 0, unknown: 0 },
-  // lookup bypasses MIX entirely — uses top-N across all source types
+  // lookup and curriculum bypass MIX entirely
   lookup:      { summary: 0, lesson: 0, vocab: 0, workbook: 0, genki: 0, unknown: 0 },
+  curriculum:  { summary: 0, lesson: 0, vocab: 0, workbook: 0, genki: 0, unknown: 0 },
 };
 
 // ─── Output cleanup ───────────────────────────────────────────────────────────
@@ -342,8 +346,19 @@ const LOOKUP_PATTERNS: RegExp[] = [
   // "where in the course/materials/lessons"
   /\bwhere\s+(in\s+(the\s+)?(course|materials?|lessons?|class))\b/i,
 
-  // "where is this explained/covered/found"
+  // "where is this/it/that explained/covered/found"
   /\bwhere\s+(is|was)\s+(this|it|that)\s+(explained|covered|taught|found)\b/i,
+
+  // "where is X explained/covered/found" — topic is a noun phrase, not a pronoun
+  // e.g. "where is は vs が explained?", "where is the te-form covered?"
+  /\bwhere\s+(is|are|was|were)\s+.{1,60}\b(explained|covered|taught|found|mentioned|introduced)\b/i,
+
+  // "where does X appear" — e.g. "where does the te-form appear in the workbook?"
+  /\bwhere\s+does\s+.{0,60}\bappear\b/i,
+
+  // "in the workbook" / "in the exercises" — location lookup
+  /\bin\s+(the\s+)?workbook\b/i,
+  /\bin\s+(the\s+)?exercises?\b/i,
 
   // "where did we learn/study"
   /\bwhere\s+did\s+we\s+(learn|study|cover)\b/i,
@@ -387,6 +402,15 @@ const LOOKUP_PATTERNS: RegExp[] = [
   // "in the course/class materials"
   /\bin\s+the\s+(course|class)\s+materials?\b/i,
 
+  // "do my/your/the materials explain/cover/contain/include X?"
+  /\bdo\s+(?:my|your|the|our)\s+materials?\s+(?:explain|cover|contain|include|mention|address|discuss)\b/i,
+
+  // "does my/your/the course/workbook/textbook explain/cover X?"
+  /\bdoes\s+(?:my|your|the|our)\s+(?:course|workbook|textbook|material)\s+(?:explain|cover|contain|include|mention)\b/i,
+
+  // "do my/your materials X" — catch remaining verb forms
+  /\bdo\s+(?:my|your|the|our)\s+(?:course\s+)?materials?\b/i,
+
   // "lesson N covers/teaches/explains/includes something"
   /\blesson\s+\d+.*?(cover|teach|explain|include)\b/i,
 
@@ -427,6 +451,69 @@ function detectLookupType(question: string): LookupType {
   return APPEARANCE_PATTERNS.some((re) => re.test(question)) ? "appearance" : "teaching";
 }
 
+// ─── Curriculum intent detection ──────────────────────────────────────────────
+//
+// Curriculum questions ask about course structure: which lesson introduces a
+// topic, what is covered in a given lesson, what to review beforehand.
+// These are distinct from lookup (topic-in-materials) and grammar explanations.
+
+type CurriculumQueryType = "first-introduces" | "lesson-topics" | "review-before" | "generic";
+
+const CURRICULUM_PATTERNS: RegExp[] = [
+  // "first introduces/covers/teaches X"
+  /\bfirst\s+(introduces?|covered?|taught|appears?|explains?)\b/i,
+
+  // "what/which lesson introduces X"
+  /\b(what|which)\s+(lesson|class|unit)\s+.{0,40}\bintroduces?\b/i,
+
+  // "main topics / what is covered in lesson N"
+  /\b(main\s+)?topics?\s+(covered\s+)?(in|of)\s+(lesson|class)\b/i,
+  /\bwhat\s+(is|are|was|were)\s+(covered|taught|introduced)\s+in\s+lesson\b/i,
+  /\bcovered\s+in\s+lesson\s+\d+\b/i,
+  /\bwhat\s+(do\s+we\s+)?learn\s+in\s+lesson\b/i,
+
+  // "review before lesson N" / "prepare for lesson N"
+  /\b(review|study|prepare)\s+(before|for)\s+(lesson|class)\s*\d+\b/i,
+
+  // "where do we learn X" / "where is X taught" (not already caught by lookup)
+  /\bwhere\s+(do\s+we|is|are)\s+.{0,50}\b(learn|taught|introduced)\b/i,
+
+  // Hebrew
+  /מה\s+לומדים\s+בשיעור/,
+  /מה\s+מכוסה\s+בשיעור/,
+  /מתי\s+לומדים/,
+  /איפה\s+לומדים/,
+  /על\s+מה\s+לחזור\s+לפני/,
+  /איזה\s+שיעור\s+מציג/,
+];
+
+function detectCurriculumIntent(question: string): boolean {
+  return CURRICULUM_PATTERNS.some((re) => re.test(question));
+}
+
+function detectCurriculumQueryType(question: string): CurriculumQueryType {
+  if (/\bfirst\s+(introduces?|covered?|taught|appears?|explains?)\b/i.test(question)) {
+    return "first-introduces";
+  }
+  if (
+    /\b(review|study|prepare)\s+(before|for)\s+(lesson|class)\s*\d+\b/i.test(question) ||
+    /על\s+מה\s+לחזור\s+לפני/.test(question)
+  ) {
+    return "review-before";
+  }
+  if (
+    /\b(main\s+)?topics?\s+(covered\s+)?(in|of)\s+(lesson|class)\b/i.test(question) ||
+    /\bwhat\s+(is|are|was|were)\s+(covered|taught|introduced)\s+in\s+lesson\b/i.test(question) ||
+    /\bcovered\s+in\s+lesson\s+\d+\b/i.test(question) ||
+    /\bwhat\s+(do\s+we\s+)?learn\s+in\s+lesson\b/i.test(question) ||
+    /מה\s+לומדים\s+בשיעור/.test(question) ||
+    /מה\s+מכוסה\s+בשיעור/.test(question)
+  ) {
+    return "lesson-topics";
+  }
+  return "generic";
+}
+
 // ─── Detection functions ──────────────────────────────────────────────────────
 
 function detectIntent(question: string): GrammarIntent {
@@ -440,6 +527,8 @@ function detectIntent(question: string): GrammarIntent {
 function detectMode(question: string): QuestionMode {
   // Lookup takes precedence — check before any other mode
   if (detectLookupIntent(question)) return "lookup";
+  // Curriculum — course-structure questions not caught by lookup patterns
+  if (detectCurriculumIntent(question)) return "curriculum";
   const q = question.toLowerCase();
   for (const mode of ["practice", "planning", "explanation"] as QuestionMode[]) {
     if (MODE_KEYWORDS[mode].some((kw) => q.includes(kw))) return mode;
@@ -566,11 +655,11 @@ function loadTopicIndex(): TopicIndex | null {
 // Maps question patterns to topic keys in topic-index.json
 const TOPIC_KEY_PATTERNS: { pattern: RegExp; key: string }[] = [
   { pattern: /\bte[-\s]?form\b|\bて[-\s]?form\b|て形/i,                           key: "te-form" },
-  { pattern: /\bは\s*(?:vs?|and|versus)\s*が\b|\bwa\s*(?:vs?|and|versus)\s*ga\b/i, key: "particles-wa-ga" },
+  { pattern: /は\s*(?:vs?|and|versus)\s*が|\bwa\s*(?:vs?|and|versus)\s*ga\b/i,     key: "particles-wa-ga" },
   { pattern: /\bparticle\s+は\b|\bは\s+particle\b|\btopic\s+(?:marker|particle)\b/i, key: "particle-wa" },
   { pattern: /\bparticle\s+が\b|\bが\s+particle\b|\bsubject\s+(?:marker|particle)\b/i, key: "particle-ga" },
   { pattern: /\bparticle\s+を\b|\bを\s+particle\b|\b(?:wo|direct\s+object\s+marker)\b/i, key: "particle-wo" },
-  { pattern: /\bに\s*(?:vs?|and|versus)\s*で\b|\bni\s*(?:vs?|and|versus)\s*de\b/i, key: "particles-ni-de" },
+  { pattern: /に\s*(?:vs?|and|versus)\s*で|\bni\s*(?:vs?|and|versus)\s*de\b/i,     key: "particles-ni-de" },
   { pattern: /\bparticle\s+に\b|\bに\s+particle\b|\bni\s+(?:particle|direction|destination)\b/i, key: "particle-ni" },
   { pattern: /\bparticle\s+で\b|\bで\s+particle\b|\bde\s+(?:particle|location|action)\b/i, key: "particle-de" },
   { pattern: /\bparticle\s+と\b|\bと\s+particle\b/i,                              key: "particle-to" },
@@ -579,6 +668,7 @@ const TOPIC_KEY_PATTERNS: { pattern: RegExp; key: string }[] = [
   { pattern: /\bna[-\s]?adjective[s]?\b|\bな[-\s]?形容詞\b/i,                     key: "na-adjectives" },
   { pattern: /\bi[-\s]?adjective[s]?\b|\bい[-\s]?形容詞\b/i,                      key: "i-adjectives" },
   { pattern: /\bます\s*(?:form)?\b|\bpolite\s+form\b|\bmasu\s+form\b/i,           key: "masu-form" },
+  { pattern: /\bnegative\s+verb\b|\bverb\s+negati(?:on|ve)\b|\bnegative\s+form\s+of\s+verb[s]?\b/i, key: "negative-verb-form" },
   { pattern: /\bnegative\s+(?:form|verb)\b|\bません\b|\bnai\s+form\b|\bmasen\b/i, key: "negative-form" },
   { pattern: /\bpast\s+tense\b|\bました\b|\bmashita\b|\bta[-\s]form\b/i,           key: "past-tense" },
   { pattern: /\bpast\s+negative\b|\bませんでした\b/i,                              key: "past-negative" },
@@ -661,6 +751,102 @@ function buildTopicIndexContext(entry: TopicIndexEntry, lookupType: LookupType):
   return sections.join("\n\n") + lessonNumberList;
 }
 
+// ─── Negation-type-aware context builder ─────────────────────────────────────
+//
+// The "negative-form" topic index entry mixes four distinct negation types:
+//   verb negation  (ません/ませんでした)      — Lessons 5, 8
+//   copula negation (じゃないです/じゃありません) — Lesson 2
+//   i-adjective negation (くない/くありません) — Lesson 10
+//   suki/na-adj negation (すきじゃない)        — Lesson 11
+//
+// When the user asks specifically about verb negation, this function:
+//   (a) presents verb-negation chunks first
+//   (b) labels other types as RELATED BUT DISTINCT
+//   (c) prepends an explicit instruction to the model context
+
+type NegationType = "verb" | "copula" | "adjective" | "suki" | "incidental";
+
+function getNegationType(match: TopicIndexMatch): NegationType {
+  const aliases = match.matchedAliases;
+  // Explicit "negative verb" alias only appears in Lesson 5 and 8 chunks
+  if (aliases.includes("negative verb") || aliases.includes("verb negation")) return "verb";
+  const ln = match.lessonNumber;
+  if (ln === 5 || ln === 8) return "verb";
+  if (ln === 10) return "adjective";
+  if (ln === 11) return "suki";
+  if (ln === 2 && (aliases.includes("ない") || aliases.includes("negative form") || aliases.includes("じゃない"))) return "copula";
+  return "incidental";
+}
+
+function buildNegationTopicContext(
+  entry: TopicIndexEntry,
+  lookupType: LookupType,
+  verbSpecific: boolean,
+): string {
+  const dedup = (matches: TopicIndexMatch[]): TopicIndexMatch[] => {
+    const seen = new Set<number>();
+    return matches.filter((m) => {
+      if (m.lessonNumber === null) return true;
+      if (seen.has(m.lessonNumber)) return false;
+      seen.add(m.lessonNumber);
+      return true;
+    });
+  };
+
+  const fmtMatch = (m: TopicIndexMatch): string => {
+    const tag = m.lessonNumber !== null ? `Lesson ${m.lessonNumber}` : "No lesson number";
+    return `[${tag} / ${m.sourceType} / ${m.sourceFile}]\n${m.excerpt}`;
+  };
+
+  const classified = {
+    verb:       dedup(entry.matches.filter((m) => getNegationType(m) === "verb")),
+    copula:     dedup(entry.matches.filter((m) => getNegationType(m) === "copula")),
+    adjective:  dedup(entry.matches.filter((m) => getNegationType(m) === "adjective")),
+    suki:       dedup(entry.matches.filter((m) => getNegationType(m) === "suki")),
+  };
+
+  const lines: string[] = [];
+
+  if (verbSpecific) {
+    lines.push(
+      "=== INSTRUCTION: The user asked specifically about VERB negation (ません/ませんでした). ===",
+      "=== Prioritise verb negation below. If you mention adjective/suki negation, label it explicitly as a RELATED BUT DISTINCT type. ===",
+      "",
+    );
+  }
+
+  const relPrefix = verbSpecific ? "RELATED BUT DISTINCT — " : "";
+
+  if (classified.verb.length > 0) {
+    lines.push(`=== VERB NEGATION — ません / ませんでした ("does not do", "did not do") ===\n`);
+    lines.push(classified.verb.map(fmtMatch).join("\n\n---\n\n"));
+  } else {
+    lines.push("=== VERB NEGATION ===\n\n(no explicit teaching found in lesson evidence)");
+  }
+
+  if (classified.copula.length > 0) {
+    lines.push(`\n=== ${relPrefix}COPULA / NOUN NEGATION — じゃないです / じゃありません ("is not [noun]") ===\n`);
+    lines.push(classified.copula.map(fmtMatch).join("\n\n---\n\n"));
+  }
+
+  if (classified.adjective.length > 0) {
+    lines.push(`\n=== ${relPrefix}I-ADJECTIVE NEGATION — くないです / くありません ("not [adjective]") ===\n`);
+    lines.push(classified.adjective.map(fmtMatch).join("\n\n---\n\n"));
+  }
+
+  if (classified.suki.length > 0) {
+    lines.push(`\n=== ${relPrefix}SUKI / NA-ADJECTIVE NEGATION — すきじゃない / きれいじゃない ===\n`);
+    lines.push(classified.suki.map(fmtMatch).join("\n\n---\n\n"));
+  }
+
+  const lessonNumbers = entry.summary.lessonNumbers;
+  lines.push(
+    `\n[Topic index summary: found in lessons ${lessonNumbers.join(", ")}; total matches: ${entry.summary.totalMatches}]`,
+  );
+
+  return lines.join("\n");
+}
+
 // ─── Query expansion for lookup retrieval ────────────────────────────────────
 
 // Each entry: if the question matches `pattern`, add `terms` to the embedding query.
@@ -672,6 +858,10 @@ const GRAMMAR_EXPANSIONS: { pattern: RegExp; terms: string[] }[] = [
   {
     pattern: /\bは\s*(?:vs?|and|versus)\s*が\b|\bwa\s*(?:vs?|and|versus)\s*ga\b|\b(?:は|wa)\s+(?:が|ga)\s+(?:particle|difference)\b/i,
     terms: ["は が particle comparison", "topic marker subject marker", "wa ga difference"],
+  },
+  {
+    pattern: /\bnegative\s+verb\b|\bverb\s+negati(?:on|ve)\b|\bnegative\s+form\s+of\s+verb[s]?\b/i,
+    terms: ["negative verb form", "ません verb negation", "does not do", "masen form", "verb conjugation negative", "ません ませんでした"],
   },
   {
     pattern: /\bnegative\s+(?:form|verb)\b|\bません\b|\bない\s+form\b|\bnai\s+form\b|\bmasen\b/i,
@@ -800,6 +990,273 @@ function computeKeywordScores(chunks: EmbeddedChunk[], terms: string[]): Keyword
   return results.sort((a, b) => b.score - a.score);
 }
 
+// ─── Curriculum retrieval ─────────────────────────────────────────────────────
+
+// Broader topic aliases for searching summary chunk text.
+// These are shorter/simpler than GRAMMAR_EXPANSIONS because summary chunks use
+// natural prose like "The particle で" rather than embedding-friendly phrases.
+const CURRICULUM_TOPIC_EXPANSIONS: { pattern: RegExp; aliases: string[] }[] = [
+  { pattern: /\badjectives?\b/i,
+    aliases: ["adjective", "adjectives", "けいようし", "i-adjective", "na-adjective", "形容詞"] },
+  { pattern: /\bte[-\s]?form\b|\bて[-\s]?form\b|て形/i,
+    aliases: ["te-form", "て form", "て-form", "て形", "te form"] },
+  { pattern: /\bparticle\s+で\b|\bで\s+particle\b|\bde\s+particle\b/i,
+    aliases: ["で", "particle で", "de particle", "location", "place of action"] },
+  { pattern: /\bparticle\s+に\b|\bに\s+particle\b|\bni\s+particle\b/i,
+    aliases: ["に", "particle に", "ni particle", "direction", "destination"] },
+  { pattern: /\bparticle\s+は\b|\bは\s+particle\b|\btopic\s+(?:marker|particle)\b/i,
+    aliases: ["は", "wa particle", "topic marker", "topic particle"] },
+  { pattern: /\bparticle\s+が\b|\bが\s+particle\b|\bsubject\s+(?:marker|particle)\b/i,
+    aliases: ["が", "ga particle", "subject marker"] },
+  { pattern: /\bparticle\s+を\b|\bを\s+particle\b|\bdirect\s+object\b/i,
+    aliases: ["を", "wo particle", "direct object"] },
+  { pattern: /\bparticle\s+と\b|\bと\s+particle\b/i,
+    aliases: ["と", "to particle", "list"] },
+  { pattern: /\bparticle\s+の\b|\bの\s+particle\b|\bpossession\b/i,
+    aliases: ["の", "no particle", "possession"] },
+  { pattern: /\bparticle\s+へ\b|\bへ\s+particle\b/i,
+    aliases: ["へ", "he particle", "direction"] },
+  { pattern: /\bgreetings?\b/i,
+    aliases: ["greeting", "greetings", "こんにちは", "おはよう"] },
+  { pattern: /\bpast\s+tense\b|\bました\b|\bmashita\b/i,
+    aliases: ["past tense", "ました", "past"] },
+  { pattern: /\bnegative\s+(?:form|verb)?\b|\bません\b|\bmasen\b/i,
+    aliases: ["negative", "ません", "ない", "masen"] },
+  { pattern: /\bmasu\s+form\b|\bpolite\s+form\b|\bます\b/i,
+    aliases: ["ます", "masu", "polite form"] },
+  { pattern: /\bexistence\s+verb[s]?\b|\bimasu\b|\barimasu\b|\bいます\b|\bあります\b/i,
+    aliases: ["existence verb", "います", "あります", "iru", "aru"] },
+  { pattern: /\bfrequency\b|\bfrequency\s+adverb[s]?\b/i,
+    aliases: ["frequency", "adverb", "いつも", "よく", "ときどき"] },
+  { pattern: /\bdemonstratives?\b|\bkore\b|\bsore\b|\bkono\b|\bこれ\b|\bそれ\b/i,
+    aliases: ["demonstrative", "これ", "それ", "kore", "sore", "kono"] },
+  { pattern: /\bhiragana\b/i,
+    aliases: ["hiragana", "ひらがな"] },
+  { pattern: /\bkatakana\b/i,
+    aliases: ["katakana", "カタカナ"] },
+  { pattern: /\btelling\s+time\b|\btime\s+expression[s]?\b/i,
+    aliases: ["time", "telling time", "時"] },
+  { pattern: /\bdirection[s]?\b|\binvitation[s]?\b/i,
+    aliases: ["direction", "invitation", "ませんか", "ましょう"] },
+  { pattern: /\bself.?introduction\b|\bintroduce\s+yourself\b/i,
+    aliases: ["self introduction", "自己紹介", "はじめまして"] },
+  { pattern: /\bnumber[s]?\b|\bcounting\b|\bcounter[s]?\b/i,
+    aliases: ["number", "counting", "counter", "一", "二", "三"] },
+  { pattern: /\bsentence\s+structure\b|\bword\s+order\b|\bSOV\b/i,
+    aliases: ["sentence structure", "word order", "SOV"] },
+  // Hebrew topic patterns
+  { pattern: /פועל[ים]?/,   aliases: ["verb", "verbs", "ます", "te form"] },
+  { pattern: /חלקיק[ים]?/,  aliases: ["particle", "は", "が", "を", "に", "で"] },
+  { pattern: /שלילה/,       aliases: ["negative", "ません", "ない"] },
+  { pattern: /עבר/,         aliases: ["past tense", "ました"] },
+];
+
+function extractCurriculumAliases(question: string): string[] {
+  const aliases: string[] = [];
+
+  for (const { pattern, aliases: terms } of CURRICULUM_TOPIC_EXPANSIONS) {
+    if (pattern.test(question)) aliases.push(...terms);
+  }
+
+  // Include any Japanese characters written directly in the question
+  const japanese = question.match(/[ぁ-ゟ゛-ゞァ-ヿ一-鿿]+/g) ?? [];
+  aliases.push(...japanese);
+
+  // Extract "particle X" / "the particle X" where X is a short symbol
+  const particleMatch = question.match(/particle\s+([^\s,?!.()]{1,4})/i);
+  if (particleMatch) {
+    const p = particleMatch[1]!.replace(/[?.,!]/g, "");
+    if (p.length >= 1) aliases.push(p, `particle ${p}`, `${p} particle`);
+  }
+
+  return [...new Set(aliases)].filter((a) => a.length >= 1);
+}
+
+// ─── CourseIndex ──────────────────────────────────────────────────────────────
+//
+// Deterministic inverted index built from summary chunks at startup.
+// Aliases are pre-indexed so lookup() requires no embeddings.
+
+interface CourseIndexResult {
+  chunks: EmbeddedChunk[];
+  matchedAliases: string[];
+  matchedLessons: number[];
+}
+
+class CourseIndex {
+  private readonly byLesson = new Map<number, EmbeddedChunk[]>();
+  // Tier 1: alias found in the "## Main Topics" section of the overview chunk (high precision)
+  private readonly mainTopicsAliasMap = new Map<string, Set<number>>();
+  // Tier 2: alias found anywhere in the lesson's summary chunks (broader fallback)
+  private readonly bodyAliasMap       = new Map<string, Set<number>>();
+  readonly lessonCount: number;
+
+  constructor(allChunks: EmbeddedChunk[]) {
+    // Group summary chunks by lesson, sorted by chunkIndex (doc order)
+    for (const chunk of allChunks) {
+      if (chunk.sourceType !== "summary" || chunk.lessonNumber === null) continue;
+      const ln = chunk.lessonNumber;
+      if (!this.byLesson.has(ln)) this.byLesson.set(ln, []);
+      this.byLesson.get(ln)!.push(chunk);
+    }
+    for (const chunks of this.byLesson.values()) {
+      chunks.sort((a, b) => (a.chunkIndex ?? 0) - (b.chunkIndex ?? 0));
+    }
+    this.lessonCount = this.byLesson.size;
+
+    for (const [lesson, chunks] of this.byLesson.entries()) {
+      // Tier 1: index only the "## Main Topics" section of the overview chunk
+      const overview = chunks[0];
+      const mainTopicsText = overview
+        ? CourseIndex.extractMainTopics(overview.text)
+        : "";
+
+      // Tier 2: full text of all summary chunks for this lesson
+      const fullText = CourseIndex.normalize(chunks.map((c) => c.text).join("\n"));
+
+      for (const { aliases } of CURRICULUM_TOPIC_EXPANSIONS) {
+        for (const alias of aliases) {
+          const normAlias = CourseIndex.normalize(alias);
+          if (normAlias.length < 1) continue;
+
+          if (mainTopicsText.includes(normAlias)) {
+            if (!this.mainTopicsAliasMap.has(normAlias))
+              this.mainTopicsAliasMap.set(normAlias, new Set());
+            this.mainTopicsAliasMap.get(normAlias)!.add(lesson);
+          }
+
+          if (fullText.includes(normAlias)) {
+            if (!this.bodyAliasMap.has(normAlias))
+              this.bodyAliasMap.set(normAlias, new Set());
+            this.bodyAliasMap.get(normAlias)!.add(lesson);
+          }
+        }
+      }
+    }
+  }
+
+  // Lowercase English, preserve Japanese, collapse punctuation to spaces.
+  static normalize(text: string): string {
+    return text
+      .toLowerCase()
+      .replace(/[・、。！？「」（）【】《》〈〉]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  // Extract and normalize the "## Main Topics" section from an overview chunk.
+  private static extractMainTopics(text: string): string {
+    const m = text.match(/##\s+Main\s+Topics([\s\S]*?)(?=\n##|\n#|$)/i);
+    const raw = m ? m[1]! : text.slice(0, 600);
+    return CourseIndex.normalize(raw);
+  }
+
+  // All summary chunks for a specific lesson, in document order.
+  forLesson(lesson: number): EmbeddedChunk[] {
+    return this.byLesson.get(lesson) ?? [];
+  }
+
+  // Lessons that match any alias, preferring Main Topics matches.
+  // Returns lessons present in main-topics tier if any exist; otherwise falls
+  // back to body-text tier. This prevents "で" from matching every lesson just
+  // because the character appears incidentally in body text.
+  private matchingLessons(aliases: string[]): Map<number, string[]> {
+    const mainMatches = new Map<number, string[]>();
+    const bodyMatches = new Map<number, string[]>();
+
+    for (const alias of aliases) {
+      const normAlias = CourseIndex.normalize(alias);
+
+      for (const lesson of this.mainTopicsAliasMap.get(normAlias) ?? []) {
+        if (!mainMatches.has(lesson)) mainMatches.set(lesson, []);
+        mainMatches.get(lesson)!.push(alias);
+      }
+      for (const lesson of this.bodyAliasMap.get(normAlias) ?? []) {
+        if (!bodyMatches.has(lesson)) bodyMatches.set(lesson, []);
+        bodyMatches.get(lesson)!.push(alias);
+      }
+    }
+
+    // Prefer main-topics tier; fall back to body tier only if nothing in main
+    return mainMatches.size > 0 ? mainMatches : bodyMatches;
+  }
+
+  // Select chunks appropriate for the query type.
+  select(
+    queryType: CurriculumQueryType,
+    aliases: string[],
+    targetLesson: number | null,
+  ): CourseIndexResult | null {
+
+    // ── lesson-topics: all chunks for the specified lesson ─────────────────
+    if (queryType === "lesson-topics" && targetLesson !== null) {
+      const chunks = this.forLesson(targetLesson).slice(0, 10);
+      if (chunks.length > 0) {
+        return { chunks, matchedAliases: [], matchedLessons: [targetLesson] };
+      }
+      return null;
+    }
+
+    // ── review-before: summary chunks for the two preceding lessons ────────
+    if (queryType === "review-before" && targetLesson !== null) {
+      const prev = [targetLesson - 1, targetLesson - 2].filter((l) => l >= 1);
+      const chunks = prev.flatMap((l) => this.forLesson(l).slice(0, 5));
+      if (chunks.length > 0) {
+        return { chunks, matchedAliases: [], matchedLessons: prev };
+      }
+      return null;
+    }
+
+    // ── alias-based lookup (first-introduces / generic) ────────────────────
+    const lessonAliasMap = this.matchingLessons(aliases);
+    if (lessonAliasMap.size === 0) return null;
+
+    // Sort lessons ascending so the earliest lesson appears first
+    const sorted = [...lessonAliasMap.entries()].sort((a, b) => a[0] - b[0]);
+    const matchedLessons  = sorted.map(([l]) => l);
+    const matchedAliases  = [...new Set(sorted.flatMap(([, a]) => a))];
+
+    if (queryType === "first-introduces") {
+      // Earliest lesson's chunks (overview first) + next 2 lessons' overviews for context
+      const [firstLesson, ...rest] = sorted;
+      const chunks = [
+        ...this.forLesson(firstLesson![0]).slice(0, 4),
+        ...rest.slice(0, 2).flatMap(([l]) => this.forLesson(l).slice(0, 1)),
+      ];
+      return { chunks, matchedAliases, matchedLessons };
+    }
+
+    // Generic: overview chunks for each matching lesson
+    const chunks = sorted.flatMap(([l]) => this.forLesson(l).slice(0, 2)).slice(0, 10);
+    return { chunks, matchedAliases, matchedLessons };
+  }
+}
+
+function buildCurriculumContext(
+  result: CourseIndexResult,
+  queryType: CurriculumQueryType,
+): string {
+  const fmt = (chunk: EmbeddedChunk): string => {
+    const tag = chunk.lessonNumber !== null ? `Lesson ${chunk.lessonNumber}` : "No lesson number";
+    return `[${tag} / ${chunk.sourceType} / ${chunk.sourceFile}]\n${chunk.text}`;
+  };
+
+  const header =
+    queryType === "first-introduces" ? "=== COURSE INDEX — sorted by lesson number ascending (earliest first) ===" :
+    queryType === "lesson-topics"    ? "=== COURSE INDEX — lesson content ===" :
+    queryType === "review-before"    ? "=== COURSE INDEX — prerequisite lessons ===" :
+                                       "=== COURSE INDEX ===";
+
+  const aliasLine = result.matchedAliases.length > 0
+    ? `Aliases matched: ${result.matchedAliases.join(", ")}\n\n`
+    : "";
+  const lessonLine = result.matchedLessons.length > 0
+    ? `Lessons found: ${result.matchedLessons.join(", ")}\n\n`
+    : "";
+
+  return `${header}\n\n${aliasLine}${lessonLine}${result.chunks.map(fmt).join("\n\n---\n\n")}`;
+}
+
 // ─── System prompts ───────────────────────────────────────────────────────────
 
 // Format retrieved chunks for lookup mode.
@@ -855,6 +1312,34 @@ function buildSystemPrompt(
     ? "You are a Japanese teacher. Answer in Hebrew."
     : "You are a Japanese teacher. Answer in English.";
 
+  // ── Curriculum mode: answer from course index/summary chunks only ──────────
+  if (mode === "curriculum") {
+    if (language === "hebrew") {
+      return `${lang}
+אתה עוזר מדריך קורס. ענה אך ורק על בסיס אינדקס הקורס שסופק — אין להשתמש בידע יפנית כללי.
+
+כללים:
+- אל תסביר דקדוק — רק דווח מה מוצג ובאיזה שיעור.
+- אם מצאת ראיות ברורות: "שיעור X מציג את [נושא]."
+- אם אינך בטוח: "לפי אינדקס הקורס, נראה שזה מוצג בשיעור X."
+- אם אין ראיות: "לא מצאתי ראיות לכך באינדקס הקורס."
+- אל תמציא מספרי שיעורים.
+- לשאלה על מה מכוסה בשיעור X — רשום את הנושאים הראשיים מהסיכום.
+- לשאלה על מה לחזור לפני שיעור X — רשום את הנושאים העיקריים מהשיעורים הקודמים.`;
+    }
+    return `You are a course index assistant.
+Answer ONLY from the retrieved course index / summary chunks. Do NOT use general Japanese knowledge.
+
+Rules:
+- Do not explain grammar — only report what is covered and in which lesson.
+- If clear evidence exists: state "Lesson X introduces [topic]."
+- If uncertain: state "Based on the course index, it appears to be introduced in Lesson X."
+- If no evidence: state "I couldn't find evidence of this in the course index."
+- Do not invent lesson numbers.
+- For "what is covered in lesson X": list the main topics from the summary chunks provided.
+- For "review before lesson X": list the main topics from the preceding lesson summaries provided.`;
+  }
+
   // ── Lookup mode: only answer from retrieved context ────────────────────────
   if (mode === "lookup") {
     const isTeachingQuery = (lookupType ?? "teaching") === "teaching";
@@ -862,16 +1347,20 @@ function buildSystemPrompt(
     if (language === "hebrew") {
       const teachingRule = isTeachingQuery
         ? `כללי תשובה לשאלת חיפוש-הוראה (לפי סדר עדיפות):
-1. אם "ראיות שיעור" מכילות מספר שיעור — ענה: "שיעור X — [ציטוט קצר]"
+1. אם "ראיות שיעור" מכילות מספר שיעור:
+   - פתח בתשובה ישירה: "כן, נושא זה מופיע בשיעור X[ ובשיעור Y]."
+   - לאחר מכן פרט כל שיעור בשורה נפרדת: "שיעור X — [משפט אחד רגיל המסכם מה השיעור אומר על הנושא]"
+   - אל תציג טבלאות markdown — סכם תוכן טבלאות במשפט רגיל.
 2. אם רק "חומר עזר דקדוקי" מכיל את הנושא (ללא מספר שיעור) — ענה:
-   "מצאתי את הנושא בחומרי הדקדוק, אבל לא הצלחתי למפות אותו לשיעור ממוספר."
+   "מצאתי את הנושא בחומרי העזר הדקדוקיים, אך הוא אינו משויך לשיעור ממוספר."
 3. אם רק "ראיות אינצידנטליות" מכילות את הנושא — ענה:
    "מצאתי דוגמאות לכך בחומרים, אבל לא מצאתי את השיעור שבו זה נלמד רשמית."
 4. אם אין ראיות כלל — ענה: "לא מצאתי את זה בחומרי הקורס המאונדקסים."
 
 אסור להמציא מספרי שיעור. אסור להסיק מספר שיעור מהקשר אינצידנטלי בלבד.`
-        : `- ציין את כל המקומות שבהם הנושא מופיע — בשיעורים, בחומר עזר, ובתרגילים.
-- ציין את sourceType עבור כל ציון.
+        : `- פתח בתשובה ישירה כן/לא לשאלה.
+- לאחר מכן ציין את כל המקומות שבהם הנושא מופיע — בשיעורים, בחומר עזר, ובתרגילים.
+- לכל מיקום כתוב משפט אחד רגיל המסכם מה החומר אומר.
 - אם אין ראיות כלל — אמור: "לא מצאתי את זה בחומרי הקורס המאונדקסים."`;
 
       return `${lang}
@@ -884,28 +1373,27 @@ function buildSystemPrompt(
 
 ${teachingRule}
 
-פורמט תשובה:
-  כשיש מספר שיעור:
-    שיעור X — {העתק ביטוי קצר ישירות מהטקסט שנשלף, או השמט אם אין ציטוט מתאים}
-  כשאין מספר שיעור:
-    {sourceType}: {העתק ביטוי קצר ישירות מהטקסט שנשלף, או השמט אם אין ציטוט מתאים}
-
-חשוב: אסור לכתוב טקסט-מציין-מיקום כמו [ציטוט קצר], [excerpt], [quote here], או כל טקסט בסוגריים מרובעים במקום תוכן אמיתי. צטט את הטקסט האמיתי שנשלף, או השמט לחלוטין.`;
+חשוב: אסור לכתוב טקסט-מציין-מיקום כמו [ציטוט קצר], [excerpt], [quote here], או כל טקסט בסוגריים מרובעים במקום תוכן אמיתי. כתוב משפטים רגילים המבוססים על הטקסט שנשלף, או השמט לחלוטין.`;
     }
 
     const teachingRule = isTeachingQuery
       ? `Answer rules for a teaching-lookup query (apply in priority order):
-1. If LESSON EVIDENCE contains the topic with a lesson number → report: "Lesson X — [short quote]"
-2. If only GRAMMAR REFERENCE contains the topic (no lesson number) → respond with:
-   "I found this topic in the grammar materials, but I couldn't map it to a numbered lesson."
-3. If only INCIDENTAL APPEARANCES contain the topic → respond with:
+1. If LESSON EVIDENCE contains the topic with a lesson number:
+   - Start with a direct answer: "Yes, this is covered in Lesson X[ and Lesson Y]." (or "No, I couldn't find this in the course materials." if nothing found)
+   - Then list each lesson on its own line: "Lesson X — [one plain sentence summarising what that lesson says about the topic, based on the retrieved text]"
+   - If multiple lessons cover it, list each one.
+2. If only GRAMMAR REFERENCE contains the topic (no lesson number):
+   "I found this topic in the grammar reference materials, but it isn't tied to a specific lesson number."
+3. If only INCIDENTAL APPEARANCES contain the topic:
    "I found examples of this in the materials, but I couldn't find the lesson where it is explicitly taught."
-4. If none of the sections mention the topic → respond with:
+4. If none of the sections mention the topic:
    "I couldn't find this in the indexed course materials."
 
-Do NOT invent lesson numbers. Do NOT infer a lesson number from incidental or grammar-reference evidence.`
-      : `- Report all locations where the topic appears — lesson, grammar reference, and incidental.
-- Include the sourceType for each location.
+Do NOT invent lesson numbers. Do NOT infer a lesson number from incidental or grammar-reference evidence.
+Do NOT output raw markdown tables from the retrieved text — summarise table content as a plain sentence instead.`
+      : `- Start with a direct yes/no answer to the question.
+- Then report all locations where the topic appears — lesson, grammar reference, and incidental.
+- For each location write one plain sentence summarising what the material says.
 - If none of the sections mention the topic, respond with:
   "I couldn't find this in the indexed course materials."`;
 
@@ -919,13 +1407,7 @@ The context is split into three sections:
 
 ${teachingRule}
 
-Answer format:
-  When a lesson number is known:
-    Lesson X — {copy a short phrase directly from the retrieved text, or omit if nothing fits}
-  When no lesson number is available:
-    {sourceType}: {copy a short phrase directly from the retrieved text, or omit if nothing fits}
-
-IMPORTANT: Never output placeholder text such as [short quote], [excerpt], [quote here], or any text in square brackets as a substitution for real content. Either quote the real retrieved text or omit the quote entirely.`;
+IMPORTANT: Never output placeholder text such as [short quote], [excerpt], [quote here], or any text in square brackets as a substitution for real content. Write plain sentences based on the retrieved text, or omit if nothing fits.`;
   }
 
   const base       = `${OUTPUT_RULES}${GRAMMAR_ACCURACY_RULES}${TEACHING_STYLE}`;
@@ -1128,6 +1610,19 @@ async function main() {
     process.exit(1);
   }
 
+  // Fail fast with a clear message if the LLM server is unreachable.
+  try {
+    await llm.healthCheck();
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
+  }
+
+  const llmConfig = await loadConfig();
+  const interactionStart = Date.now();
+  const isFollowUp = detectFollowUp(question);
+  const previousLogEntry = isFollowUp ? getLastEntry() : null;
+
   const embeddingsPath = path.join(process.cwd(), "data", "all-embeddings.json");
   if (!fs.existsSync(embeddingsPath)) {
     console.error("Embeddings file not found:", embeddingsPath);
@@ -1135,6 +1630,9 @@ async function main() {
   }
 
   const chunks: EmbeddedChunk[] = JSON.parse(fs.readFileSync(embeddingsPath, "utf-8"));
+
+  // Build deterministic course index from summary chunks (no embeddings required)
+  const courseIndex = new CourseIndex(chunks);
 
   // Detect mode first so lookup can expand the query before embedding
   const intent       = detectIntent(question);
@@ -1144,6 +1642,11 @@ async function main() {
   const language     = detectLanguage(question);
   const lookupType   = mode === "lookup" ? detectLookupType(question) : undefined;
 
+  // useCurriculumPath: true when mode is "curriculum" OR when mode is "lookup"
+  // but the topic index misses AND the question has curriculum intent.
+  // Set to false initially; lookup block may flip it to true on a miss.
+  let useCurriculumPath = mode === "curriculum";
+
   // ── Topic index early-return (lookup mode only) ──────────────────────────
   // Query the pre-built topic index before touching embeddings. If the question
   // maps to a known grammar topic, we can answer directly from exact-match data.
@@ -1152,7 +1655,9 @@ async function main() {
   if (mode === "lookup") {
     const topicIndex = loadTopicIndex();
     const topicKey   = topicIndex ? detectTopicKey(question) : null;
-    const topicEntry = topicKey && topicIndex ? topicIndex[topicKey] : undefined;
+    // "negative-verb-form" is a refined key — the index stores it under "negative-form"
+    const resolvedKey = topicKey === "negative-verb-form" ? "negative-form" : topicKey;
+    const topicEntry = resolvedKey && topicIndex ? topicIndex[resolvedKey] : undefined;
 
     if (debugLookupEarly) {
       console.log("\n╔══════════════════════════════════════════════╗");
@@ -1174,7 +1679,10 @@ async function main() {
     }
 
     if (topicEntry) {
-      const context      = buildTopicIndexContext(topicEntry, lookupType ?? "teaching");
+      const isNegationTopic = topicKey === "negative-form" || topicKey === "negative-verb-form";
+      const context = isNegationTopic
+        ? buildNegationTopicContext(topicEntry, lookupType ?? "teaching", topicKey === "negative-verb-form")
+        : buildTopicIndexContext(topicEntry, lookupType ?? "teaching");
       const systemPrompt = buildSystemPrompt(intent, mode, difficulty, language, lookupType);
       const prompt       = `${systemPrompt}\n\nContext:\n${context}\n\nQuestion: ${question}`;
 
@@ -1185,13 +1693,103 @@ async function main() {
       const answer = await llm.chat([{ role: "user", content: prompt }]);
       console.log("Answer:\n");
       console.log(cleanOutput(answer));
+      appendChatLog({
+        timestamp: new Date().toISOString(),
+        question,
+        answer: cleanOutput(answer),
+        mode,
+        intent,
+        model: llmConfig.model,
+        provider: llmConfig.provider,
+        ...(topicKey ? { topicIndexKey: topicKey } : {}),
+        retrievedChunks: topicEntry.matches.slice(0, 10).map((m) => ({
+          id: m.chunkId,
+          sourceType: m.sourceType,
+        })),
+        durationMs: Date.now() - interactionStart,
+        ...(isFollowUp ? { isFollowUp: true } : {}),
+        ...(isFollowUp && previousLogEntry ? { previousTurnId: previousLogEntry.timestamp } : {}),
+      });
       return;
     }
 
-    if (debugLookupEarly) {
-      console.log(`  → No topic index hit; falling through to semantic retrieval`);
-      console.log(`\n${"═".repeat(60)}\n`);
+    // No topic index hit — redirect to CourseIndex if question has curriculum intent
+    if (detectCurriculumIntent(question)) {
+      useCurriculumPath = true;
+      if (debugLookupEarly) {
+        console.log(`  → No topic index hit; curriculum intent detected — redirecting to CourseIndex`);
+        console.log(`\n${"═".repeat(60)}\n`);
+      }
+    } else {
+      if (debugLookupEarly) {
+        console.log(`  → No topic index hit; falling through to semantic retrieval`);
+        console.log(`\n${"═".repeat(60)}\n`);
+      }
     }
+  }
+
+  // ── CourseIndex path (curriculum mode or lookup redirect) ────────────────
+  // Deterministic alias-based retrieval over summary chunks; no embeddings needed.
+  if (useCurriculumPath) {
+    const curriculumQueryType = detectCurriculumQueryType(question);
+    const curriculumAliases   = extractCurriculumAliases(question);
+    const debugCurriculum     = process.env.COURSE_LOOKUP_DEBUG === "true";
+
+    console.log(`\nIntent: curriculum  |  Query type: ${curriculumQueryType}  |  Language: ${language}`);
+    console.log(`CourseIndex: ${courseIndex.lessonCount} lessons indexed`);
+    if (lessonNumber !== null) console.log(`Target lesson: ${lessonNumber}`);
+
+    const ciResult = courseIndex.select(curriculumQueryType, curriculumAliases, lessonNumber);
+
+    if (debugCurriculum) {
+      console.log(`\n  Aliases extracted: ${curriculumAliases.join(", ") || "(none)"}`);
+      if (ciResult) {
+        console.log(`  Matched aliases  : ${ciResult.matchedAliases.join(", ") || "(none)"}`);
+        console.log(`  Matched lessons  : ${ciResult.matchedLessons.join(", ")}`);
+        console.log(`  Chunks selected  : ${ciResult.chunks.length}`);
+        for (const chunk of ciResult.chunks) {
+          const ln = chunk.lessonNumber !== null ? `lesson=${chunk.lessonNumber}` : "lesson=?";
+          console.log(`    ${ln.padEnd(10)}  ${chunk.id}`);
+        }
+      } else {
+        console.log(`  → No CourseIndex matches`);
+      }
+      console.log(`\n${"═".repeat(60)}\n`);
+    } else {
+      if (ciResult) {
+        console.log(`Matched lessons: [${ciResult.matchedLessons.join(", ")}]  chunks: ${ciResult.chunks.length}`);
+      }
+    }
+
+    if (ciResult) {
+      const context      = buildCurriculumContext(ciResult, curriculumQueryType);
+      const systemPrompt = buildSystemPrompt(intent, "curriculum", difficulty, language);
+      const prompt       = `${systemPrompt}\n\nContext:\n${context}\n\nQuestion: ${question}`;
+
+      console.log("\nAsking model...\n");
+      const answer = await llm.chat([{ role: "user", content: prompt }]);
+      console.log("Answer:\n");
+      console.log(cleanOutput(answer));
+      appendChatLog({
+        timestamp: new Date().toISOString(),
+        question,
+        answer: cleanOutput(answer),
+        mode: "curriculum",
+        intent,
+        model: llmConfig.model,
+        provider: llmConfig.provider,
+        retrievedChunks: ciResult.chunks.slice(0, 10).map((c) => ({
+          id: c.id,
+          sourceType: c.sourceType,
+        })),
+        durationMs: Date.now() - interactionStart,
+        ...(isFollowUp ? { isFollowUp: true } : {}),
+        ...(isFollowUp && previousLogEntry ? { previousTurnId: previousLogEntry.timestamp } : {}),
+      });
+      return;
+    }
+
+    console.log("CourseIndex: no matches; falling through to semantic retrieval.");
   }
 
   // For lookup: expand the query with grammar synonyms for better retrieval
@@ -1353,7 +1951,8 @@ async function main() {
         if (!byType[t]) byType[t] = [];
         byType[t]!.push(scored);
       }
-      const mix = MIX[mode];
+      // curriculum mode reaching here means CourseIndex had no match — use explanation mix
+      const mix = MIX[mode === "curriculum" ? "explanation" : mode];
       selected = [];
       for (const [sourceType, count] of Object.entries(mix)) {
         if (count === 0) continue;
@@ -1414,6 +2013,23 @@ Question: ${question}`;
 
   console.log("Answer:\n");
   console.log(cleanOutput(answer));
+  appendChatLog({
+    timestamp: new Date().toISOString(),
+    question,
+    answer: cleanOutput(answer),
+    mode,
+    intent,
+    model: llmConfig.model,
+    provider: llmConfig.provider,
+    retrievedChunks: selected.slice(0, 10).map((s) => ({
+      id: s.chunk.id,
+      sourceType: s.chunk.sourceType,
+      score: s.rawScore,
+    })),
+    durationMs: Date.now() - interactionStart,
+    ...(isFollowUp ? { isFollowUp: true } : {}),
+    ...(isFollowUp && previousLogEntry ? { previousTurnId: previousLogEntry.timestamp } : {}),
+  });
 }
 
 main().catch((error) => {

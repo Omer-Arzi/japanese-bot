@@ -99,4 +99,21 @@ export class VllmProvider implements LlmProvider {
     const json = (await res.json()) as OpenAiEmbedResponse;
     return json.data[0]!.embedding;
   }
+
+  async healthCheck(): Promise<void> {
+    const base = this.baseUrl.replace(/\/v1\/?$/, "");
+    const url = `${base}/health`;
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("ECONNREFUSED") || msg.includes("fetch failed") || msg.includes("ENOTFOUND")) {
+        throw new Error(
+          `vLLM server is not running.\n  Expected at: ${this.baseUrl}`,
+        );
+      }
+      throw err;
+    }
+  }
 }
