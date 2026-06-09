@@ -1,6 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
 import { llm } from "./llm/LlmService";
+import { loadConfig } from "./llm/config";
+import { appendChatLog, type ChatLogEntry } from "./chat-logger";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1244,16 +1246,20 @@ Rules:
     if (language === "hebrew") {
       const teachingRule = isTeachingQuery
         ? `כללי תשובה לשאלת חיפוש-הוראה (לפי סדר עדיפות):
-1. אם "ראיות שיעור" מכילות מספר שיעור — ענה: "שיעור X — [ציטוט קצר]"
+1. אם "ראיות שיעור" מכילות מספר שיעור:
+   - פתח בתשובה ישירה: "כן, נושא זה מופיע בשיעור X[ ובשיעור Y]."
+   - לאחר מכן פרט כל שיעור בשורה נפרדת: "שיעור X — [משפט אחד רגיל המסכם מה השיעור אומר על הנושא]"
+   - אל תציג טבלאות markdown — סכם תוכן טבלאות במשפט רגיל.
 2. אם רק "חומר עזר דקדוקי" מכיל את הנושא (ללא מספר שיעור) — ענה:
-   "מצאתי את הנושא בחומרי הדקדוק, אבל לא הצלחתי למפות אותו לשיעור ממוספר."
+   "מצאתי את הנושא בחומרי העזר הדקדוקיים, אך הוא אינו משויך לשיעור ממוספר."
 3. אם רק "ראיות אינצידנטליות" מכילות את הנושא — ענה:
    "מצאתי דוגמאות לכך בחומרים, אבל לא מצאתי את השיעור שבו זה נלמד רשמית."
 4. אם אין ראיות כלל — ענה: "לא מצאתי את זה בחומרי הקורס המאונדקסים."
 
 אסור להמציא מספרי שיעור. אסור להסיק מספר שיעור מהקשר אינצידנטלי בלבד.`
-        : `- ציין את כל המקומות שבהם הנושא מופיע — בשיעורים, בחומר עזר, ובתרגילים.
-- ציין את sourceType עבור כל ציון.
+        : `- פתח בתשובה ישירה כן/לא לשאלה.
+- לאחר מכן ציין את כל המקומות שבהם הנושא מופיע — בשיעורים, בחומר עזר, ובתרגילים.
+- לכל מיקום כתוב משפט אחד רגיל המסכם מה החומר אומר.
 - אם אין ראיות כלל — אמור: "לא מצאתי את זה בחומרי הקורס המאונדקסים."`;
 
       return `${lang}
@@ -1266,28 +1272,27 @@ Rules:
 
 ${teachingRule}
 
-פורמט תשובה:
-  כשיש מספר שיעור:
-    שיעור X — {העתק ביטוי קצר ישירות מהטקסט שנשלף, או השמט אם אין ציטוט מתאים}
-  כשאין מספר שיעור:
-    {sourceType}: {העתק ביטוי קצר ישירות מהטקסט שנשלף, או השמט אם אין ציטוט מתאים}
-
-חשוב: אסור לכתוב טקסט-מציין-מיקום כמו [ציטוט קצר], [excerpt], [quote here], או כל טקסט בסוגריים מרובעים במקום תוכן אמיתי. צטט את הטקסט האמיתי שנשלף, או השמט לחלוטין.`;
+חשוב: אסור לכתוב טקסט-מציין-מיקום כמו [ציטוט קצר], [excerpt], [quote here], או כל טקסט בסוגריים מרובעים במקום תוכן אמיתי. כתוב משפטים רגילים המבוססים על הטקסט שנשלף, או השמט לחלוטין.`;
     }
 
     const teachingRule = isTeachingQuery
       ? `Answer rules for a teaching-lookup query (apply in priority order):
-1. If LESSON EVIDENCE contains the topic with a lesson number → report: "Lesson X — [short quote]"
-2. If only GRAMMAR REFERENCE contains the topic (no lesson number) → respond with:
-   "I found this topic in the grammar materials, but I couldn't map it to a numbered lesson."
-3. If only INCIDENTAL APPEARANCES contain the topic → respond with:
+1. If LESSON EVIDENCE contains the topic with a lesson number:
+   - Start with a direct answer: "Yes, this is covered in Lesson X[ and Lesson Y]." (or "No, I couldn't find this in the course materials." if nothing found)
+   - Then list each lesson on its own line: "Lesson X — [one plain sentence summarising what that lesson says about the topic, based on the retrieved text]"
+   - If multiple lessons cover it, list each one.
+2. If only GRAMMAR REFERENCE contains the topic (no lesson number):
+   "I found this topic in the grammar reference materials, but it isn't tied to a specific lesson number."
+3. If only INCIDENTAL APPEARANCES contain the topic:
    "I found examples of this in the materials, but I couldn't find the lesson where it is explicitly taught."
-4. If none of the sections mention the topic → respond with:
+4. If none of the sections mention the topic:
    "I couldn't find this in the indexed course materials."
 
-Do NOT invent lesson numbers. Do NOT infer a lesson number from incidental or grammar-reference evidence.`
-      : `- Report all locations where the topic appears — lesson, grammar reference, and incidental.
-- Include the sourceType for each location.
+Do NOT invent lesson numbers. Do NOT infer a lesson number from incidental or grammar-reference evidence.
+Do NOT output raw markdown tables from the retrieved text — summarise table content as a plain sentence instead.`
+      : `- Start with a direct yes/no answer to the question.
+- Then report all locations where the topic appears — lesson, grammar reference, and incidental.
+- For each location write one plain sentence summarising what the material says.
 - If none of the sections mention the topic, respond with:
   "I couldn't find this in the indexed course materials."`;
 
@@ -1301,13 +1306,7 @@ The context is split into three sections:
 
 ${teachingRule}
 
-Answer format:
-  When a lesson number is known:
-    Lesson X — {copy a short phrase directly from the retrieved text, or omit if nothing fits}
-  When no lesson number is available:
-    {sourceType}: {copy a short phrase directly from the retrieved text, or omit if nothing fits}
-
-IMPORTANT: Never output placeholder text such as [short quote], [excerpt], [quote here], or any text in square brackets as a substitution for real content. Either quote the real retrieved text or omit the quote entirely.`;
+IMPORTANT: Never output placeholder text such as [short quote], [excerpt], [quote here], or any text in square brackets as a substitution for real content. Write plain sentences based on the retrieved text, or omit if nothing fits.`;
   }
 
   const base       = `${OUTPUT_RULES}${GRAMMAR_ACCURACY_RULES}${TEACHING_STYLE}`;
@@ -1518,6 +1517,9 @@ async function main() {
     process.exit(1);
   }
 
+  const llmConfig = await loadConfig();
+  const interactionStart = Date.now();
+
   const embeddingsPath = path.join(process.cwd(), "data", "all-embeddings.json");
   if (!fs.existsSync(embeddingsPath)) {
     console.error("Embeddings file not found:", embeddingsPath);
@@ -1583,6 +1585,21 @@ async function main() {
       const answer = await llm.chat([{ role: "user", content: prompt }]);
       console.log("Answer:\n");
       console.log(cleanOutput(answer));
+      appendChatLog({
+        timestamp: new Date().toISOString(),
+        question,
+        answer: cleanOutput(answer),
+        mode,
+        intent,
+        model: llmConfig.model,
+        provider: llmConfig.provider,
+        ...(topicKey ? { topicIndexKey: topicKey } : {}),
+        retrievedChunks: topicEntry.matches.slice(0, 10).map((m) => ({
+          id: m.chunkId,
+          sourceType: m.sourceType,
+        })),
+        durationMs: Date.now() - interactionStart,
+      });
       return;
     }
 
@@ -1643,6 +1660,20 @@ async function main() {
       const answer = await llm.chat([{ role: "user", content: prompt }]);
       console.log("Answer:\n");
       console.log(cleanOutput(answer));
+      appendChatLog({
+        timestamp: new Date().toISOString(),
+        question,
+        answer: cleanOutput(answer),
+        mode: "curriculum",
+        intent,
+        model: llmConfig.model,
+        provider: llmConfig.provider,
+        retrievedChunks: ciResult.chunks.slice(0, 10).map((c) => ({
+          id: c.id,
+          sourceType: c.sourceType,
+        })),
+        durationMs: Date.now() - interactionStart,
+      });
       return;
     }
 
@@ -1870,6 +1901,21 @@ Question: ${question}`;
 
   console.log("Answer:\n");
   console.log(cleanOutput(answer));
+  appendChatLog({
+    timestamp: new Date().toISOString(),
+    question,
+    answer: cleanOutput(answer),
+    mode,
+    intent,
+    model: llmConfig.model,
+    provider: llmConfig.provider,
+    retrievedChunks: selected.slice(0, 10).map((s) => ({
+      id: s.chunk.id,
+      sourceType: s.chunk.sourceType,
+      score: s.rawScore,
+    })),
+    durationMs: Date.now() - interactionStart,
+  });
 }
 
 main().catch((error) => {

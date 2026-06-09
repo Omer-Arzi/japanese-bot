@@ -32,3 +32,6 @@ evals/runs/
 
 # Local LLM provider config (machine-specific, never commit)
 .local-llm-config.json
+
+# Recent chat interaction logs (local-only, never commit)
+logs/recent-chat-runs.json

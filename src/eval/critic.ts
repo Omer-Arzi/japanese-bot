@@ -8,7 +8,7 @@ const REPORT_PATH = path.join(PROJECT_DIR, "evals", "runs", "latest", IS_SMOKE ?
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface EvalResult {
+export interface EvalResult {
   id: string;
   topic: string;
   question: string;
@@ -107,8 +107,9 @@ function checkOverconfidentPhrases(answer: string): Finding {
   const PATTERNS: Array<{ re: RegExp; label: string }> = [
     { re: /\ball\s+(verbs?|adjectives?|nouns?|words?|particles?)\b/i, label: '"all [grammar item]"' },
     { re: /\bwithout\s+exception\b/i, label: '"without exception"' },
-    // "always use な" is accurate for na-adjectives — exclude it to avoid false positives.
-    { re: /\balways\s+(?!use\s+な)(use|mark|means?|indicates?)\b/i, label: '"always [verb]"' },
+    // "always use な/きれい/[Japanese form]" is accurate grammar instruction — exclude it.
+    // Also exclude "always use **..." (bold markdown before a specific form).
+    { re: /\balways\s+(?!use\s+(?:な|\*{0,2}[ぁ-ん々〆〤ァ-ヶ一-龥]))(use|mark|means?|indicates?)\b/i, label: '"always [verb]"' },
     { re: /\bthe\s+rule\s+is\s+that\b/i, label: '"the rule is that"' },
     { re: /\bevery\s+(verb|adjective|noun|particle)\b/i, label: '"every [grammar item]"' },
     { re: /\bכל\s+הפעלים\b/, label: '"כל הפעלים" (all verbs in Hebrew)' },
@@ -686,7 +687,7 @@ function checkLookupTeachingEscape(topic: string, question: string, answer: stri
 
 // ─── Per-question runner ──────────────────────────────────────────────────────
 
-function critiqueOne(result: EvalResult): QuestionReport {
+export function critiqueOne(result: EvalResult): QuestionReport {
   if (result.error) {
     return {
       id: result.id,
@@ -724,7 +725,7 @@ function critiqueOne(result: EvalResult): QuestionReport {
 
 // ─── Report formatting ────────────────────────────────────────────────────────
 
-function formatReport(reports: QuestionReport[], runTimestamp: string): string {
+export function formatReport(reports: QuestionReport[], runTimestamp: string): string {
   const total = reports.length;
   const passed = reports.filter((r) => r.status === "PASS").length;
   const failed = total - passed;
@@ -850,4 +851,6 @@ function main(): void {
   console.log(`Report saved to: ${REPORT_PATH}`);
 }
 
-main();
+if (require.main === module) {
+  main();
+}

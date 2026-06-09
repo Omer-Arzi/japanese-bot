@@ -57,6 +57,24 @@ npm run eval:repair:next    # full check when done
 
 ---
 
+### Real chat logging
+
+Every question asked via `ask-sensei` or the Tauri app is logged locally to `logs/recent-chat-runs.json` (max 10 entries, rolling). Interactions where the LLM server was offline are never logged. The file is git-ignored.
+
+| Script | Description |
+|---|---|
+| `npm run eval:recent` | Run all critic checks against the 10 most recent real chat interactions. Saves report to `evals/runs/latest/recent_chat_critic_report.md`. |
+| `npm run export:recent-for-claude` | Export the 10 recent interactions (+ critic results if already run) to `evals/runs/latest/recent_for_claude.md` for manual Claude Code review. |
+
+**Typical workflow:**
+```
+npm run eval:recent                  # score real interactions
+npm run export:recent-for-claude     # bundle for Claude Code review
+# then: paste evals/runs/latest/recent_for_claude.md into Claude Code
+```
+
+---
+
 ### Indexing / Debug
 
 | Script | Description |

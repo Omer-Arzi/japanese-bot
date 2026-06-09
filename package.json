@@ -20,7 +20,9 @@
     "eval:smoke": "npx ts-node src/eval/repairNext.ts --smoke",
     "debug:topic": "npx ts-node src/debug/findTopicInChunks.ts",
     "index:topics": "npx ts-node src/indexing/buildTopicIndex.ts",
-    "eval:repair:next": "npx ts-node src/eval/repairNext.ts"
+    "eval:repair:next": "npx ts-node src/eval/repairNext.ts",
+    "eval:recent": "npx ts-node src/eval/runRecentChatCritic.ts",
+    "export:recent-for-claude": "npx ts-node src/eval/exportRecentForClaude.ts"
   },
   "keywords": [],
   "author": "",
