@@ -23,6 +23,8 @@ export interface ChatLogEntry {
   topicIndexKey?: string;
   durationMs: number;
   error?: string;
+  isFollowUp?: boolean;
+  previousTurnId?: string;
 }
 
 // Patterns that indicate the LLM server was unreachable — skip logging these.
@@ -38,8 +40,39 @@ const OFFLINE_PATTERNS = [
   /ENOTFOUND/i,
 ];
 
+// Short, context-dependent phrases that signal a follow-up question.
+const FOLLOWUP_PATTERNS = [
+  /^why\??\s*$/i,
+  /^how\s+so\??\s*$/i,
+  /^what\s+do\s+you\s+mean\??\s*$/i,
+  /^why\s+lesson\s+\d+/i,
+  /^why\s+(those|these|them|that)\b/i,
+  /^what\s+about\s+\w/i,
+  /^and\s+(why|how|what)\b/i,
+  /^can\s+you\s+explain\s+(that|why|more)\b/i,
+  /^(so|but)\s+why\b/i,
+  /^why\s+(not|is|are|was|were|did|do|does)\b/i,
+];
+
 export function isOllamaOfflineError(message: string): boolean {
   return OFFLINE_PATTERNS.some((p) => p.test(message));
+}
+
+export function detectFollowUp(question: string): boolean {
+  const trimmed = question.trim();
+  // Very short questions (≤ 40 chars) that match follow-up patterns
+  if (trimmed.length > 120) return false;
+  return FOLLOWUP_PATTERNS.some((p) => p.test(trimmed));
+}
+
+export function getLastEntry(): ChatLogEntry | null {
+  try {
+    if (!fs.existsSync(LOG_PATH)) return null;
+    const entries = JSON.parse(fs.readFileSync(LOG_PATH, "utf-8")) as ChatLogEntry[];
+    return entries.length > 0 ? (entries[entries.length - 1] ?? null) : null;
+  } catch {
+    return null;
+  }
 }
 
 export function appendChatLog(entry: ChatLogEntry): void {

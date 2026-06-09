@@ -2,7 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { llm } from "./llm/LlmService";
 import { loadConfig } from "./llm/config";
-import { appendChatLog, type ChatLogEntry } from "./chat-logger";
+import { appendChatLog, detectFollowUp, getLastEntry } from "./chat-logger";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -668,6 +668,7 @@ const TOPIC_KEY_PATTERNS: { pattern: RegExp; key: string }[] = [
   { pattern: /\bna[-\s]?adjective[s]?\b|\bな[-\s]?形容詞\b/i,                     key: "na-adjectives" },
   { pattern: /\bi[-\s]?adjective[s]?\b|\bい[-\s]?形容詞\b/i,                      key: "i-adjectives" },
   { pattern: /\bます\s*(?:form)?\b|\bpolite\s+form\b|\bmasu\s+form\b/i,           key: "masu-form" },
+  { pattern: /\bnegative\s+verb\b|\bverb\s+negati(?:on|ve)\b|\bnegative\s+form\s+of\s+verb[s]?\b/i, key: "negative-verb-form" },
   { pattern: /\bnegative\s+(?:form|verb)\b|\bません\b|\bnai\s+form\b|\bmasen\b/i, key: "negative-form" },
   { pattern: /\bpast\s+tense\b|\bました\b|\bmashita\b|\bta[-\s]form\b/i,           key: "past-tense" },
   { pattern: /\bpast\s+negative\b|\bませんでした\b/i,                              key: "past-negative" },
@@ -750,6 +751,102 @@ function buildTopicIndexContext(entry: TopicIndexEntry, lookupType: LookupType):
   return sections.join("\n\n") + lessonNumberList;
 }
 
+// ─── Negation-type-aware context builder ─────────────────────────────────────
+//
+// The "negative-form" topic index entry mixes four distinct negation types:
+//   verb negation  (ません/ませんでした)      — Lessons 5, 8
+//   copula negation (じゃないです/じゃありません) — Lesson 2
+//   i-adjective negation (くない/くありません) — Lesson 10
+//   suki/na-adj negation (すきじゃない)        — Lesson 11
+//
+// When the user asks specifically about verb negation, this function:
+//   (a) presents verb-negation chunks first
+//   (b) labels other types as RELATED BUT DISTINCT
+//   (c) prepends an explicit instruction to the model context
+
+type NegationType = "verb" | "copula" | "adjective" | "suki" | "incidental";
+
+function getNegationType(match: TopicIndexMatch): NegationType {
+  const aliases = match.matchedAliases;
+  // Explicit "negative verb" alias only appears in Lesson 5 and 8 chunks
+  if (aliases.includes("negative verb") || aliases.includes("verb negation")) return "verb";
+  const ln = match.lessonNumber;
+  if (ln === 5 || ln === 8) return "verb";
+  if (ln === 10) return "adjective";
+  if (ln === 11) return "suki";
+  if (ln === 2 && (aliases.includes("ない") || aliases.includes("negative form") || aliases.includes("じゃない"))) return "copula";
+  return "incidental";
+}
+
+function buildNegationTopicContext(
+  entry: TopicIndexEntry,
+  lookupType: LookupType,
+  verbSpecific: boolean,
+): string {
+  const dedup = (matches: TopicIndexMatch[]): TopicIndexMatch[] => {
+    const seen = new Set<number>();
+    return matches.filter((m) => {
+      if (m.lessonNumber === null) return true;
+      if (seen.has(m.lessonNumber)) return false;
+      seen.add(m.lessonNumber);
+      return true;
+    });
+  };
+
+  const fmtMatch = (m: TopicIndexMatch): string => {
+    const tag = m.lessonNumber !== null ? `Lesson ${m.lessonNumber}` : "No lesson number";
+    return `[${tag} / ${m.sourceType} / ${m.sourceFile}]\n${m.excerpt}`;
+  };
+
+  const classified = {
+    verb:       dedup(entry.matches.filter((m) => getNegationType(m) === "verb")),
+    copula:     dedup(entry.matches.filter((m) => getNegationType(m) === "copula")),
+    adjective:  dedup(entry.matches.filter((m) => getNegationType(m) === "adjective")),
+    suki:       dedup(entry.matches.filter((m) => getNegationType(m) === "suki")),
+  };
+
+  const lines: string[] = [];
+
+  if (verbSpecific) {
+    lines.push(
+      "=== INSTRUCTION: The user asked specifically about VERB negation (ません/ませんでした). ===",
+      "=== Prioritise verb negation below. If you mention adjective/suki negation, label it explicitly as a RELATED BUT DISTINCT type. ===",
+      "",
+    );
+  }
+
+  const relPrefix = verbSpecific ? "RELATED BUT DISTINCT — " : "";
+
+  if (classified.verb.length > 0) {
+    lines.push(`=== VERB NEGATION — ません / ませんでした ("does not do", "did not do") ===\n`);
+    lines.push(classified.verb.map(fmtMatch).join("\n\n---\n\n"));
+  } else {
+    lines.push("=== VERB NEGATION ===\n\n(no explicit teaching found in lesson evidence)");
+  }
+
+  if (classified.copula.length > 0) {
+    lines.push(`\n=== ${relPrefix}COPULA / NOUN NEGATION — じゃないです / じゃありません ("is not [noun]") ===\n`);
+    lines.push(classified.copula.map(fmtMatch).join("\n\n---\n\n"));
+  }
+
+  if (classified.adjective.length > 0) {
+    lines.push(`\n=== ${relPrefix}I-ADJECTIVE NEGATION — くないです / くありません ("not [adjective]") ===\n`);
+    lines.push(classified.adjective.map(fmtMatch).join("\n\n---\n\n"));
+  }
+
+  if (classified.suki.length > 0) {
+    lines.push(`\n=== ${relPrefix}SUKI / NA-ADJECTIVE NEGATION — すきじゃない / きれいじゃない ===\n`);
+    lines.push(classified.suki.map(fmtMatch).join("\n\n---\n\n"));
+  }
+
+  const lessonNumbers = entry.summary.lessonNumbers;
+  lines.push(
+    `\n[Topic index summary: found in lessons ${lessonNumbers.join(", ")}; total matches: ${entry.summary.totalMatches}]`,
+  );
+
+  return lines.join("\n");
+}
+
 // ─── Query expansion for lookup retrieval ────────────────────────────────────
 
 // Each entry: if the question matches `pattern`, add `terms` to the embedding query.
@@ -761,6 +858,10 @@ const GRAMMAR_EXPANSIONS: { pattern: RegExp; terms: string[] }[] = [
   {
     pattern: /\bは\s*(?:vs?|and|versus)\s*が\b|\bwa\s*(?:vs?|and|versus)\s*ga\b|\b(?:は|wa)\s+(?:が|ga)\s+(?:particle|difference)\b/i,
     terms: ["は が particle comparison", "topic marker subject marker", "wa ga difference"],
+  },
+  {
+    pattern: /\bnegative\s+verb\b|\bverb\s+negati(?:on|ve)\b|\bnegative\s+form\s+of\s+verb[s]?\b/i,
+    terms: ["negative verb form", "ません verb negation", "does not do", "masen form", "verb conjugation negative", "ません ませんでした"],
   },
   {
     pattern: /\bnegative\s+(?:form|verb)\b|\bません\b|\bない\s+form\b|\bnai\s+form\b|\bmasen\b/i,
@@ -1519,6 +1620,8 @@ async function main() {
 
   const llmConfig = await loadConfig();
   const interactionStart = Date.now();
+  const isFollowUp = detectFollowUp(question);
+  const previousLogEntry = isFollowUp ? getLastEntry() : null;
 
   const embeddingsPath = path.join(process.cwd(), "data", "all-embeddings.json");
   if (!fs.existsSync(embeddingsPath)) {
@@ -1552,7 +1655,9 @@ async function main() {
   if (mode === "lookup") {
     const topicIndex = loadTopicIndex();
     const topicKey   = topicIndex ? detectTopicKey(question) : null;
-    const topicEntry = topicKey && topicIndex ? topicIndex[topicKey] : undefined;
+    // "negative-verb-form" is a refined key — the index stores it under "negative-form"
+    const resolvedKey = topicKey === "negative-verb-form" ? "negative-form" : topicKey;
+    const topicEntry = resolvedKey && topicIndex ? topicIndex[resolvedKey] : undefined;
 
     if (debugLookupEarly) {
       console.log("\n╔══════════════════════════════════════════════╗");
@@ -1574,7 +1679,10 @@ async function main() {
     }
 
     if (topicEntry) {
-      const context      = buildTopicIndexContext(topicEntry, lookupType ?? "teaching");
+      const isNegationTopic = topicKey === "negative-form" || topicKey === "negative-verb-form";
+      const context = isNegationTopic
+        ? buildNegationTopicContext(topicEntry, lookupType ?? "teaching", topicKey === "negative-verb-form")
+        : buildTopicIndexContext(topicEntry, lookupType ?? "teaching");
       const systemPrompt = buildSystemPrompt(intent, mode, difficulty, language, lookupType);
       const prompt       = `${systemPrompt}\n\nContext:\n${context}\n\nQuestion: ${question}`;
 
@@ -1599,6 +1707,8 @@ async function main() {
           sourceType: m.sourceType,
         })),
         durationMs: Date.now() - interactionStart,
+        ...(isFollowUp ? { isFollowUp: true } : {}),
+        ...(isFollowUp && previousLogEntry ? { previousTurnId: previousLogEntry.timestamp } : {}),
       });
       return;
     }
@@ -1673,6 +1783,8 @@ async function main() {
           sourceType: c.sourceType,
         })),
         durationMs: Date.now() - interactionStart,
+        ...(isFollowUp ? { isFollowUp: true } : {}),
+        ...(isFollowUp && previousLogEntry ? { previousTurnId: previousLogEntry.timestamp } : {}),
       });
       return;
     }
@@ -1915,6 +2027,8 @@ Question: ${question}`;
       score: s.rawScore,
     })),
     durationMs: Date.now() - interactionStart,
+    ...(isFollowUp ? { isFollowUp: true } : {}),
+    ...(isFollowUp && previousLogEntry ? { previousTurnId: previousLogEntry.timestamp } : {}),
   });
 }
 

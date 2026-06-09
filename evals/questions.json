@@ -1,182 +1,237 @@
 [
   {
     "id": "q01",
+    "type": "standalone",
     "topic": "particles-wa-ga",
     "question": "What is the difference between は and が in Japanese?"
   },
   {
     "id": "q02",
+    "type": "standalone",
     "topic": "te-form-exception",
     "question": "How do you form the te-form of いく (iku)? Is it regular?"
   },
   {
     "id": "q03",
+    "type": "standalone",
     "topic": "adjective-classification",
     "question": "Is きれい (kirei) an i-adjective or a na-adjective? How do you make it negative?"
   },
   {
     "id": "q04",
+    "type": "standalone",
     "topic": "particles-ni-de",
     "question": "What is the difference between に and で when talking about location?"
   },
   {
     "id": "q05",
+    "type": "standalone",
     "topic": "particle-wo",
     "question": "What does the particle を (wo) mark in a sentence? Give an example."
   },
   {
     "id": "q06",
+    "type": "standalone",
     "topic": "past-tense",
     "question": "How do you form the past tense of a verb in polite Japanese? Give an example with たべます (tabemasu)."
   },
   {
     "id": "q07",
+    "type": "standalone",
     "topic": "negative-form",
     "question": "How do you make a verb negative in polite Japanese? Give an example with のみます (nomimasu)."
   },
   {
     "id": "q08",
+    "type": "standalone",
     "topic": "particle-to",
     "question": "How is the particle と (to) used to list nouns? What is its role when used before を?"
   },
   {
     "id": "q09",
+    "type": "standalone",
     "topic": "na-adjectives",
     "question": "How do na-adjectives work in Japanese? How do you use them before a noun and in a sentence ending?"
   },
   {
     "id": "q10",
+    "type": "standalone",
     "topic": "te-form-regular",
     "question": "How do you form the te-form of かく (kaku)? What is the general pattern for く verbs?"
   },
   {
     "id": "q11",
+    "type": "standalone",
     "topic": "lookup-te-form",
     "question": "In which lesson did we learn the て-form?"
   },
   {
     "id": "q12",
+    "type": "standalone",
     "topic": "lookup-particles",
     "question": "Where in the course materials do particles like は and が appear?"
   },
   {
     "id": "q13",
+    "type": "standalone",
     "topic": "lookup-na-adjectives",
     "question": "Did we already cover na-adjectives in class?"
   },
   {
     "id": "q14",
+    "type": "standalone",
     "topic": "lookup-past-tense",
     "question": "What lesson covers the past tense of verbs?"
   },
   {
     "id": "q15",
+    "type": "standalone",
     "topic": "lookup-negative",
     "question": "Is the negative form of verbs explained somewhere in my course materials?"
   },
   {
     "id": "q16",
+    "type": "standalone",
     "topic": "lookup-te-form-lesson-number",
     "question": "what is the lesson number we learned about the \"te\" form, from lesson 1-12?"
   },
   {
     "id": "q17",
+    "type": "standalone",
     "topic": "lookup-teaching-te-form",
     "question": "Which lesson did we learn the te-form in?"
   },
   {
     "id": "q18",
+    "type": "standalone",
     "topic": "lookup-teaching-te-form-coverage",
     "question": "Did we already learn te-form in class?"
   },
   {
     "id": "q19",
+    "type": "standalone",
     "topic": "lookup-appearance-te-form",
     "question": "Where does the te-form appear in the workbook?"
   },
   {
     "id": "q20",
+    "type": "standalone",
     "topic": "lookup-topic-index-te-form-lesson",
     "question": "Which lesson did we learn the te-form?"
   },
   {
     "id": "q21",
+    "type": "standalone",
     "topic": "lookup-topic-index-te-form-coverage",
     "question": "Where does te-form appear in my materials?"
   },
   {
     "id": "q22",
+    "type": "standalone",
     "topic": "lookup-topic-index-na-adjectives",
     "question": "Which lesson introduces na-adjectives?"
   },
   {
     "id": "q23",
+    "type": "standalone",
     "topic": "lookup-topic-index-wa-ga",
     "question": "Where is は vs が explained?"
   },
   {
     "id": "q24",
+    "type": "standalone",
     "topic": "verb-group",
     "question": "Is おきる (okiru) a Group 1 or Group 2 verb? Why?"
   },
   {
     "id": "q25",
+    "type": "standalone",
     "topic": "verb-group-exception",
     "question": "Is はいる (hairu) a Group 1 or Group 2 verb?"
   },
   {
     "id": "q26",
+    "type": "standalone",
     "topic": "te-form-special",
     "question": "What is the te-form of する?"
   },
   {
     "id": "q27",
+    "type": "standalone",
     "topic": "te-form-special",
     "question": "What is the te-form of くる?"
   },
   {
     "id": "q28",
+    "type": "standalone",
     "topic": "aru-iru",
     "question": "What is the difference between ある and いる?"
   },
   {
     "id": "q29",
+    "type": "standalone",
     "topic": "aru-iru-example",
     "question": "Should I use ある or いる for a cat?"
   },
   {
     "id": "q30",
+    "type": "standalone",
     "topic": "suki-particle",
     "question": "Which particle is normally used with すき?"
   },
   {
     "id": "q31",
+    "type": "standalone",
     "topic": "suki-sentence",
     "question": "How do you say 'I like sushi' in Japanese?"
   },
   {
     "id": "q32",
+    "type": "standalone",
     "topic": "translation",
     "question": "Translate: 'I drink coffee and tea.'"
   },
   {
     "id": "q33",
+    "type": "standalone",
     "topic": "translation",
     "question": "Translate: 'The library is quiet.'"
   },
   {
     "id": "q34",
+    "type": "standalone",
     "topic": "lookup-synonym",
     "question": "Where in our lessons is the negative verb form introduced?"
   },
   {
     "id": "q35",
+    "type": "standalone",
     "topic": "lookup-synonym",
     "question": "Which chapter first talks about na-adjectives?"
   },
   {
     "id": "q36",
+    "type": "standalone",
     "topic": "lookup-synonym",
     "question": "Do my materials explain the difference between は and が?"
+  },
+  {
+    "id": "q37",
+    "type": "standalone",
+    "topic": "lookup-negative",
+    "question": "Where is the negative verb form explained?"
+  },
+  {
+    "id": "q38",
+    "type": "followup",
+    "dependsOn": "q37",
+    "topic": "followup-negative-lessons",
+    "question": "Why Lesson 10 and Lesson 11?",
+    "expectedBehavior": [
+      "Must reference the previous answer",
+      "Must explain why Lesson 10 and Lesson 11 were mentioned",
+      "Must distinguish negative verb forms from negative adjective/suki forms",
+      "Must not describe Lesson 10 and Lesson 11 generally"
+    ]
   }
 ]

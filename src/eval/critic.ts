@@ -8,6 +8,11 @@ const REPORT_PATH = path.join(PROJECT_DIR, "evals", "runs", "latest", IS_SMOKE ?
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export interface PreviousTurn {
+  question: string;
+  answer: string;
+}
+
 export interface EvalResult {
   id: string;
   topic: string;
@@ -17,6 +22,10 @@ export interface EvalResult {
   timestamp: string;
   durationMs: number;
   error?: string;
+  type?: "standalone" | "followup";
+  dependsOn?: string;
+  expectedBehavior?: string[];
+  previousTurn?: PreviousTurn;
 }
 
 interface Finding {
@@ -28,11 +37,12 @@ interface Finding {
   suggestedFix?: string | undefined;
 }
 
-interface QuestionReport {
+export interface QuestionReport {
   id: string;
   topic: string;
   question: string;
-  status: "PASS" | "FAIL";
+  // "SKIP" = followup question whose previous context was unavailable
+  status: "PASS" | "FAIL" | "SKIP";
   findings: Finding[];
   error?: string;
 }
@@ -685,6 +695,154 @@ function checkLookupTeachingEscape(topic: string, question: string, answer: stri
   return SKIP;
 }
 
+// ─── Negation type confusion check ───────────────────────────────────────────
+
+// FAILs when a question asks specifically about verb negation but the answer presents
+// adjective negation (くない) or suki negation (すきじゃない) as part of the answer
+// without labeling them as a distinct negation type.
+function checkNegationTypeConfusion(question: string, answer: string): Finding {
+  const SKIP: Finding = { check: "negation-type-confusion", passed: true };
+
+  // Only applies when the question is specifically about verb negation
+  const asksVerbNegation =
+    /\bnegative\s+verb\b|\bverb\s+negati(?:on|ve)\b|\bnegative\s+form\s+of\s+verb[s]?\b/i.test(question) ||
+    /\bnegative\s+verb\s+form\b/i.test(question);
+  if (!asksVerbNegation) return SKIP;
+
+  // Check if the answer includes non-verb negation content
+  const hasAdjNegation =
+    /\bkunai\b|くない/i.test(answer) ||
+    /i[- ]adjective.*negati|negati.*i[- ]adjective/i.test(answer);
+  const hasSukiNegation =
+    /suki\s*(?:ja\s*nai|janai|negative)|すき.*じゃない|negative\s+suki/i.test(answer);
+
+  if (!hasAdjNegation && !hasSukiNegation) return SKIP;
+
+  // Check whether the answer explicitly labels these as distinct from verb negation
+  const hasDistinctionLabel =
+    /(?:adjective\s+negat|suki\s+negat|related\s+but\s+distinct|distinct\s+from\s+verb|different\s+(?:type|form)\s+from|separate\s+from\s+verb|not\s+(?:a\s+)?verb\s+negat)/i.test(answer) ||
+    /(?:also\s+covers?|note\s+that|however|by\s+contrast|unlike\s+verb)/i.test(answer);
+
+  if (!hasDistinctionLabel) {
+    const triggerRe = hasAdjNegation
+      ? /\bkunai\b|くない|i[- ]adjective.*negati/i
+      : /suki.*(?:ja\s*nai|janai)|すき.*じゃない/i;
+    return {
+      check: "negation-type-confusion",
+      passed: false,
+      excerpt: excerpt(answer, triggerRe),
+      detail:
+        "Answer includes adjective or suki negation in response to a verb-negation question without labeling them as distinct types",
+      likelyCause:
+        "The 'negative-form' topic index entry includes Lesson 10 (くない) and Lesson 11 (すきじゃない) alongside verb negation — the model presents all as 'negative verb form'",
+      suggestedFix:
+        "When answering verb-negation lookup questions, label adjective negation (くない) and suki negation (すきじゃない) as RELATED BUT DISTINCT from verb negation (ません)",
+    };
+  }
+
+  return SKIP;
+}
+
+// ─── Follow-up checks ────────────────────────────────────────────────────────
+
+// Checks that the answer references what the previous turn said (not a cold restart).
+function checkFollowupContextReference(answer: string, previousTurn: PreviousTurn): Finding {
+  const SKIP: Finding = { check: "followup-references-context", passed: true };
+
+  // Extract lesson numbers mentioned in the previous answer
+  const lessonRe = /lesson\s+(\d+)/gi;
+  const prevLessons: string[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = lessonRe.exec(previousTurn.answer)) !== null) {
+    prevLessons.push(m[1]!);
+  }
+
+  // Check for explicit back-reference phrases
+  const backRefPhrases = [
+    /\b(as|like)\s+(I|we)\s+(mentioned|said|noted|explained)\b/i,
+    /\b(those|the)\s+(lessons?|chapters?|sections?)\b/i,
+    /\bin\s+(my|the)\s+(previous|last|prior)\s+(answer|response|turn)\b/i,
+    /\bthe\s+answer\s+above\b/i,
+    /\bearlier\s+(I|we)\s+(mentioned|said|noted)\b/i,
+  ];
+  const hasBackRef = backRefPhrases.some((re) => re.test(answer));
+
+  // Check that answer mentions at least one lesson number from the previous answer
+  const answerMentionsPrevLesson =
+    prevLessons.length > 0 &&
+    prevLessons.some((ln) => new RegExp(`lesson\\s+${ln}\\b`, "i").test(answer));
+
+  if (!hasBackRef && !answerMentionsPrevLesson) {
+    return {
+      check: "followup-references-context",
+      passed: false,
+      detail:
+        "Follow-up answer does not reference the previous answer — reads like a standalone response",
+      likelyCause:
+        "The question was sent to ask-sensei without the previous turn context, or the model ignored it",
+      suggestedFix:
+        "Ensure the previous Q&A is injected into the prompt before the follow-up question",
+    };
+  }
+
+  return SKIP;
+}
+
+// Checks that a 'why X?' follow-up explains the connection, not just describes X generically.
+function checkFollowupNotGeneric(answer: string, question: string, previousTurn: PreviousTurn): Finding {
+  const SKIP: Finding = { check: "followup-not-generic", passed: true };
+
+  const isWhyQuestion = /^why\b/i.test(question.trim());
+  if (!isWhyQuestion) return SKIP;
+
+  // Detect generic lesson-description openers: "Lesson X covers/introduces/teaches/explains..."
+  const genericRe = /lesson\s+\d+\s+(covers?|introduces?|teaches?|explains?|contains?|deals?\s+with|focuses?\s+on)/i;
+  if (!genericRe.test(answer)) return SKIP;
+
+  // Also require that the answer doesn't link back to the previous question
+  const prevTopicWords = previousTurn.question
+    .toLowerCase()
+    .replace(/[^\w\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length >= 4);
+  const answerLower = answer.toLowerCase();
+  const connectsBack = prevTopicWords.some((w) => answerLower.includes(w));
+
+  if (!connectsBack) {
+    return {
+      check: "followup-not-generic",
+      passed: false,
+      excerpt: excerpt(answer, genericRe),
+      detail:
+        "Follow-up answer gives a generic lesson description without explaining why that lesson was mentioned in the previous answer",
+      likelyCause:
+        "The model treated the follow-up as a standalone question about the lesson rather than explaining the prior answer",
+      suggestedFix:
+        "Verify the previous turn context was injected into the prompt and that the system prompt instructs the model to explain its prior reasoning",
+    };
+  }
+
+  return SKIP;
+}
+
+// Checks that the answer doesn't use uncertainty words when explaining a prior known answer.
+function checkFollowupNoUncertainty(answer: string): Finding {
+  const uncertaintyRe = /\b(likely|probably|might\s+be|perhaps|possibly|may\s+be|unclear|not\s+sure|uncertain)\b/i;
+  const match = uncertaintyRe.exec(answer);
+  return {
+    check: "followup-no-uncertainty",
+    passed: !match,
+    excerpt: match ? excerpt(answer, uncertaintyRe) : undefined,
+    detail: match
+      ? `Uncertainty word "${match[0]}" found — a follow-up explaining a prior answer should be confident`
+      : undefined,
+    likelyCause:
+      "Model is hallucinating or guessing about the previous answer rather than explaining what it actually said",
+    suggestedFix:
+      "Ensure the previous answer is included verbatim in the prompt so the model can refer to it directly",
+  };
+}
+
 // ─── Per-question runner ──────────────────────────────────────────────────────
 
 export function critiqueOne(result: EvalResult): QuestionReport {
@@ -717,10 +875,30 @@ export function critiqueOne(result: EvalResult): QuestionReport {
     checkPlaceholderText(result.answer),
     checkLookupAnswerQuality(result.topic, result.question, result.answer),
     checkLookupTeachingEscape(result.topic, result.question, result.answer),
+    checkNegationTypeConfusion(result.question, result.answer),
   ];
+
+  if (result.type === "followup" && result.previousTurn) {
+    findings.push(
+      checkFollowupContextReference(result.answer, result.previousTurn),
+      checkFollowupNotGeneric(result.answer, result.question, result.previousTurn),
+      checkFollowupNoUncertainty(result.answer),
+    );
+  }
 
   const status = findings.every((f) => f.passed) ? "PASS" : "FAIL";
   return { id: result.id, topic: result.topic, question: result.question, status, findings };
+}
+
+export function makeSkipReport(id: string, topic: string, question: string, reason: string): QuestionReport {
+  return {
+    id,
+    topic,
+    question,
+    status: "SKIP",
+    findings: [],
+    error: reason,
+  };
 }
 
 // ─── Report formatting ────────────────────────────────────────────────────────
@@ -728,7 +906,8 @@ export function critiqueOne(result: EvalResult): QuestionReport {
 export function formatReport(reports: QuestionReport[], runTimestamp: string): string {
   const total = reports.length;
   const passed = reports.filter((r) => r.status === "PASS").length;
-  const failed = total - passed;
+  const skipped = reports.filter((r) => r.status === "SKIP").length;
+  const failed = total - passed - skipped;
 
   // Count issue frequency across all reports
   const issueFreq = new Map<string, number>();
@@ -755,6 +934,7 @@ export function formatReport(reports: QuestionReport[], runTimestamp: string): s
     `| Total questions | ${total} |`,
     `| Passed | ${passed} ✅ |`,
     `| Failed | ${failed} ❌ |`,
+    ...(skipped > 0 ? [`| Skipped (needs context) | ${skipped} ⏭ |`] : []),
     "",
   ];
 
@@ -773,7 +953,7 @@ export function formatReport(reports: QuestionReport[], runTimestamp: string): s
   lines.push("");
 
   for (const report of reports) {
-    const icon = report.status === "PASS" ? "✅" : "❌";
+    const icon = report.status === "PASS" ? "✅" : report.status === "SKIP" ? "⏭" : "❌";
     lines.push(`## ${report.id} — ${report.topic} — ${report.status} ${icon}`);
     lines.push("");
     lines.push(`**Question:** ${report.question}`);
@@ -841,12 +1021,13 @@ function main(): void {
 
   fs.writeFileSync(REPORT_PATH, report, "utf-8");
 
-  const passed = reports.filter((r) => r.status === "PASS").length;
+  const passed  = reports.filter((r) => r.status === "PASS").length;
+  const skipped = reports.filter((r) => r.status === "SKIP").length;
   const topIssue = [...reports.flatMap((r) => r.findings.filter((f) => !f.passed).map((f) => f.check))]
     .reduce<Record<string, number>>((acc, c) => ({ ...acc, [c]: (acc[c] ?? 0) + 1 }), {});
   const sorted = Object.entries(topIssue).sort((a, b) => b[1] - a[1]);
 
-  console.log(`Result: ${passed}/${reports.length} passed`);
+  console.log(`Result: ${passed}/${reports.length} passed${skipped > 0 ? `, ${skipped} skipped` : ""}`);
   if (sorted.length > 0) console.log(`Top issue: ${sorted[0]![0]} (${sorted[0]![1]}×)`);
   console.log(`Report saved to: ${REPORT_PATH}`);
 }

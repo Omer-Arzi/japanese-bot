@@ -57,6 +57,29 @@ npm run eval:repair:next    # full check when done
 
 ---
 
+### Standalone vs follow-up eval questions
+
+Questions in `evals/questions.json` have a `type` field:
+
+| Type | Meaning |
+|---|---|
+| `standalone` | Self-contained question — evaluated independently |
+| `followup` | Context-dependent question that only makes sense after a previous answer (uses `dependsOn` to point to the prior question ID) |
+
+Follow-up questions are run by injecting the previous question + answer as context into the prompt sent to `ask-sensei`. The critic applies three extra checks to follow-up answers:
+
+| Check | What it catches |
+|---|---|
+| `followup-references-context` | Answer ignores the previous turn (reads like a cold restart) |
+| `followup-not-generic` | "Why X?" answer describes X generically instead of explaining the prior response |
+| `followup-no-uncertainty` | Uncertainty words (likely, probably) when explaining a prior known answer |
+
+If the previous question failed or is unavailable, the follow-up is marked **SKIP** instead of FAIL — skipping context-dependent checks on incomplete data.
+
+Follow-up questions in real chat logs (`logs/recent-chat-runs.json`) are auto-detected from short context-dependent phrases like "why?", "how so?", "why Lesson 10?". The `previousTurnId` field stores the timestamp of the preceding entry so `eval:recent` can look it up.
+
+---
+
 ### Real chat logging
 
 Every question asked via `ask-sensei` or the Tauri app is logged locally to `logs/recent-chat-runs.json` (max 10 entries, rolling). Interactions where the LLM server was offline are never logged. The file is git-ignored.

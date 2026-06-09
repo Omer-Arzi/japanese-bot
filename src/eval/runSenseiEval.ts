@@ -18,6 +18,9 @@ interface Question {
   id: string;
   topic: string;
   question: string;
+  type?: "standalone" | "followup";
+  dependsOn?: string;
+  expectedBehavior?: string[];
 }
 
 interface ChunkInfo {
@@ -25,6 +28,11 @@ interface ChunkInfo {
   sourceType: string;
   lessonNumber: number | null;
   score: number;
+}
+
+interface PreviousTurn {
+  question: string;
+  answer: string;
 }
 
 interface EvalResult {
@@ -36,6 +44,10 @@ interface EvalResult {
   timestamp: string;
   durationMs: number;
   error?: string;
+  type?: "standalone" | "followup";
+  dependsOn?: string;
+  expectedBehavior?: string[];
+  previousTurn?: PreviousTurn;
 }
 
 // Run ask-sensei for a single question, collect stdout.
@@ -161,10 +173,41 @@ async function runEval(): Promise<void> {
 
   for (const q of questions) {
     const start = Date.now();
-    process.stdout.write(`[${q.id}] ${q.topic} ... `);
+    const isFollowup = q.type === "followup" && q.dependsOn != null;
+    process.stdout.write(`[${q.id}] ${q.topic}${isFollowup ? " [followup]" : ""} ... `);
+
+    // For followup questions: find the previous result and embed its Q&A as context.
+    let previousTurn: PreviousTurn | undefined;
+    let questionToSend = q.question;
+    if (isFollowup && q.dependsOn) {
+      const prev = results.find((r) => r.id === q.dependsOn);
+      if (prev && prev.answer) {
+        previousTurn = { question: prev.question, answer: prev.answer };
+        questionToSend =
+          `[Previous question]: ${prev.question}\n` +
+          `[Previous answer]: ${prev.answer}\n\n` +
+          `[Follow-up question]: ${q.question}`;
+      } else {
+        console.log(`SKIP (previous question ${q.dependsOn} not found or failed)`);
+        results.push({
+          id: q.id,
+          topic: q.topic,
+          question: q.question,
+          answer: "",
+          retrievedChunks: [],
+          timestamp: new Date().toISOString(),
+          durationMs: 0,
+          error: `Previous question ${q.dependsOn} not found or failed — cannot evaluate follow-up`,
+          ...(q.type ? { type: q.type } : {}),
+          ...(q.dependsOn ? { dependsOn: q.dependsOn } : {}),
+          ...(q.expectedBehavior ? { expectedBehavior: q.expectedBehavior } : {}),
+        });
+        continue;
+      }
+    }
 
     try {
-      const stdout = await runAskSensei(q.question);
+      const stdout = await runAskSensei(questionToSend);
       const answer = extractAnswer(stdout);
       const retrievedChunks = extractChunks(stdout);
       const durationMs = Date.now() - start;
@@ -177,6 +220,10 @@ async function runEval(): Promise<void> {
         retrievedChunks,
         timestamp: new Date().toISOString(),
         durationMs,
+        ...(q.type ? { type: q.type } : {}),
+        ...(q.dependsOn ? { dependsOn: q.dependsOn } : {}),
+        ...(q.expectedBehavior ? { expectedBehavior: q.expectedBehavior } : {}),
+        ...(previousTurn ? { previousTurn } : {}),
       });
 
       console.log(`done (${(durationMs / 1000).toFixed(1)}s, ${retrievedChunks.length} chunks)`);
@@ -193,6 +240,10 @@ async function runEval(): Promise<void> {
         timestamp: new Date().toISOString(),
         durationMs,
         error: message,
+        ...(q.type ? { type: q.type } : {}),
+        ...(q.dependsOn ? { dependsOn: q.dependsOn } : {}),
+        ...(q.expectedBehavior ? { expectedBehavior: q.expectedBehavior } : {}),
+        ...(previousTurn ? { previousTurn } : {}),
       });
 
       console.log(`FAILED: ${message}`);
