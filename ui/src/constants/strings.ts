@@ -44,7 +44,9 @@ export const STRINGS = {
   inputBar: {
     placeholder: "Ask a question... (Enter to send, Shift+Enter for newline)",
     sendButton: "Send",
+    queueButton: "+",
     loadingIndicator: "●●●",
+    queueLabel: "Queued questions",
   },
 
   modes: {

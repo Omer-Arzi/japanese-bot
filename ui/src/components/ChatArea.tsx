@@ -15,7 +15,7 @@ interface Props {
 
 export default function ChatArea({ messages, mode, onModeChange, onAddMessage }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { isLoading, sendMessage } = useChat(mode, onAddMessage);
+  const { isLoading, sendMessage, pendingQueue, removeFromQueue } = useChat(mode, onAddMessage);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -69,8 +69,9 @@ export default function ChatArea({ messages, mode, onModeChange, onAddMessage }:
 
       <InputBar
         onSend={sendMessage}
-        disabled={isLoading}
-        // Only user messages, newest first — mirrors terminal history ordering.
+        isLoading={isLoading}
+        pendingQueue={pendingQueue}
+        onRemoveQueued={removeFromQueue}
         history={messages.filter((m) => m.role === "user").map((m) => m.content).reverse()}
       />
     </div>

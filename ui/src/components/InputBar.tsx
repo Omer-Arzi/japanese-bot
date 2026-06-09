@@ -3,14 +3,23 @@ import { STRINGS } from "../constants/strings";
 
 interface Props {
   onSend: (text: string) => void;
-  disabled?: boolean;
+  isLoading?: boolean;
   placeholder?: string;
+  pendingQueue?: string[];
+  onRemoveQueued?: (index: number) => void;
   // User message history passed in from parent, ordered newest-first.
   // ArrowUp walks toward index 0 (newest), ArrowDown walks back toward draft.
   history?: string[];
 }
 
-export default function InputBar({ onSend, disabled, placeholder, history = [] }: Props) {
+export default function InputBar({
+  onSend,
+  isLoading,
+  placeholder,
+  pendingQueue = [],
+  onRemoveQueued,
+  history = [],
+}: Props) {
   const [text, setText] = useState("");
 
   // -1 = not in history mode (showing live draft or empty input)
@@ -38,10 +47,8 @@ export default function InputBar({ onSend, disabled, placeholder, history = [] }
 
   function handleSend() {
     const trimmed = text.trim();
-    if (!trimmed || disabled) return;
+    if (!trimmed) return;
     onSend(trimmed);
-    // Reset everything — next ArrowUp will show the message we just sent
-    // (it will have been added to history by the parent by the next render).
     setText("");
     setHistoryIndex(-1);
     setDraft("");
@@ -49,8 +56,6 @@ export default function InputBar({ onSend, disabled, placeholder, history = [] }
 
   function handleChange(e: ChangeEvent<HTMLTextAreaElement>) {
     // If the user types anything while browsing history, exit history mode.
-    // We do NOT restore the draft here — the user is now editing a modified
-    // copy of the history entry they were viewing.
     if (historyIndex !== -1) {
       setHistoryIndex(-1);
       setDraft("");
@@ -78,40 +83,35 @@ export default function InputBar({ onSend, disabled, placeholder, history = [] }
 
     if (e.key === "ArrowUp") {
       // Only intercept ArrowUp when the cursor is on the very first line.
-      // If it's on a lower line, let the browser move the cursor normally.
       const textBeforeCursor = textarea.value.slice(0, textarea.selectionStart);
       if (textBeforeCursor.includes("\n")) return;
 
       if (history.length === 0) return;
 
       const nextIndex = historyIndex === -1 ? 0 : historyIndex + 1;
-      if (nextIndex >= history.length) return; // Already at the oldest entry
+      if (nextIndex >= history.length) return;
 
-      // Save whatever the user had typed before entering history mode.
       if (historyIndex === -1) setDraft(text);
 
-      e.preventDefault(); // Prevent cursor from jumping to start of line
+      e.preventDefault();
       setHistoryIndex(nextIndex);
       setText(history[nextIndex]!);
       moveCursorToEndRef.current = true;
 
     } else {
       // ArrowDown: only active while in history mode.
-      if (historyIndex === -1) return; // Not in history mode; let browser handle
+      if (historyIndex === -1) return;
 
-      // Only intercept when the cursor is on the very last line.
       const textAfterCursor = textarea.value.slice(textarea.selectionEnd);
       if (textAfterCursor.includes("\n")) return;
 
       e.preventDefault();
 
       if (historyIndex === 0) {
-        // We were at the newest message — step back to the saved draft.
         setHistoryIndex(-1);
         setText(draft);
         moveCursorToEndRef.current = true;
       } else {
-        // Move forward toward the newest entry.
         const nextIndex = historyIndex - 1;
         setHistoryIndex(nextIndex);
         setText(history[nextIndex]!);
@@ -121,26 +121,60 @@ export default function InputBar({ onSend, disabled, placeholder, history = [] }
   }
 
   const s = STRINGS.inputBar;
+  const hasText = text.trim().length > 0;
+
+  // Button label: "Send" normally; "+" when loading (will queue); empty+loading = dots
+  const buttonLabel = isLoading
+    ? (hasText ? s.queueButton : s.loadingIndicator)
+    : s.sendButton;
 
   return (
-    <div className="flex gap-2 items-end p-4 border-t border-jp-border dark:border-gray-800 bg-jp-bg dark:bg-gray-950">
-      <textarea
-        ref={textareaRef}
-        value={text}
-        onChange={handleChange}
-        onKeyDown={handleKey}
-        disabled={disabled}
-        placeholder={placeholder ?? s.placeholder}
-        rows={2}
-        className="flex-1 bg-white dark:bg-gray-800 border border-jp-border dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-jp-text dark:text-gray-100 placeholder-jp-faint dark:placeholder-gray-500 resize-none focus:outline-none focus:border-jp-accent dark:focus:border-indigo-500 transition-colors disabled:opacity-50"
-      />
-      <button
-        onClick={handleSend}
-        disabled={disabled || !text.trim()}
-        className="px-4 py-3 bg-jp-accent dark:bg-indigo-600 hover:bg-jp-accent-hover dark:hover:bg-indigo-500 disabled:bg-jp-surface-2 dark:disabled:bg-gray-700 disabled:text-jp-faint dark:disabled:text-gray-500 text-white rounded-xl text-sm font-medium transition-colors flex-shrink-0 h-[52px]"
-      >
-        {disabled ? s.loadingIndicator : s.sendButton}
-      </button>
+    <div className="border-t border-jp-border dark:border-gray-800 bg-jp-bg dark:bg-gray-950">
+      {pendingQueue.length > 0 && (
+        <div className="px-4 pt-3">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-jp-faint dark:text-gray-500 mb-1.5">
+            {s.queueLabel}
+          </p>
+          <ul className="max-h-24 overflow-y-auto space-y-1">
+            {pendingQueue.map((item, i) => (
+              <li
+                key={i}
+                className="flex items-center gap-2 bg-jp-surface dark:bg-gray-800/60 rounded-lg px-3 py-1.5 text-xs text-jp-muted dark:text-gray-400"
+              >
+                <span className="flex-1 truncate">{item}</span>
+                {onRemoveQueued && (
+                  <button
+                    onClick={() => onRemoveQueued(i)}
+                    className="flex-shrink-0 text-jp-faint dark:text-gray-600 hover:text-jp-text dark:hover:text-gray-300 transition-colors leading-none"
+                    aria-label="Remove from queue"
+                  >
+                    ✕
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="flex gap-2 items-end p-4">
+        <textarea
+          ref={textareaRef}
+          value={text}
+          onChange={handleChange}
+          onKeyDown={handleKey}
+          placeholder={placeholder ?? s.placeholder}
+          rows={2}
+          className="flex-1 bg-white dark:bg-gray-800 border border-jp-border dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-jp-text dark:text-gray-100 placeholder-jp-faint dark:placeholder-gray-500 resize-none focus:outline-none focus:border-jp-accent dark:focus:border-indigo-500 transition-colors"
+        />
+        <button
+          onClick={handleSend}
+          disabled={!hasText}
+          className="px-4 py-3 bg-jp-accent dark:bg-indigo-600 hover:bg-jp-accent-hover dark:hover:bg-indigo-500 disabled:bg-jp-surface-2 dark:disabled:bg-gray-700 disabled:text-jp-faint dark:disabled:text-gray-500 text-white rounded-xl text-sm font-medium transition-colors flex-shrink-0 h-[52px]"
+        >
+          {buttonLabel}
+        </button>
+      </div>
     </div>
   );
 }

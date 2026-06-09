@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { invoke } from "../lib/invoke";
 import { Message, Mode } from "../types";
 import { STRINGS } from "../constants/strings";
@@ -7,9 +7,28 @@ export function useChat(
   mode: Mode,
   onAddMessage: (msg: Omit<Message, "id" | "timestamp">) => void,
 ) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoadingState] = useState(false);
+  const [pendingQueue, setPendingQueueState] = useState<string[]>([]);
 
-  async function sendMessage(text: string) {
+  // Refs keep closure-safe copies for use inside async callbacks.
+  const isLoadingRef = useRef(false);
+  const pendingRef = useRef<string[]>([]);
+
+  function setIsLoading(v: boolean) {
+    isLoadingRef.current = v;
+    setIsLoadingState(v);
+  }
+
+  function setPendingQueue(q: string[]) {
+    pendingRef.current = q;
+    setPendingQueueState(q);
+  }
+
+  function removeFromQueue(index: number) {
+    setPendingQueue(pendingRef.current.filter((_, i) => i !== index));
+  }
+
+  async function _sendDirect(text: string): Promise<void> {
     onAddMessage({ role: "user", content: text });
     setIsLoading(true);
 
@@ -21,10 +40,25 @@ export function useChat(
       onAddMessage({ role: "assistant", content: answer });
     } catch (err) {
       onAddMessage({ role: "error", content: String(err) });
-    } finally {
+    }
+
+    // Chain to next queued item without flickering isLoading to false between sends.
+    const next = pendingRef.current[0];
+    if (next !== undefined) {
+      setPendingQueue(pendingRef.current.slice(1));
+      await _sendDirect(next);
+    } else {
       setIsLoading(false);
     }
   }
 
-  return { isLoading, sendMessage };
+  function sendMessage(text: string) {
+    if (isLoadingRef.current) {
+      setPendingQueue([...pendingRef.current, text]);
+    } else {
+      void _sendDirect(text);
+    }
+  }
+
+  return { isLoading, sendMessage, pendingQueue, removeFromQueue };
 }
