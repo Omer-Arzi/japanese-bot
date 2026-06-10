@@ -290,6 +290,28 @@ const HEBREW_BASE_RULES = `
   ikimasu (ללכת) — לא "iku masu"
 `;
 
+// Grounding constraint — injected into every mode that can reference lesson content.
+// Prevents the model from describing lessons not present in the retrieved context.
+const GROUNDING_RULES = `
+Evidence grounding — always follow:
+- LESSON CONTENT: Only describe what a specific lesson covers if that lesson's chunks appear in the retrieved context. Do not describe lesson topics, structure, or content from training knowledge.
+- LESSON NUMBERS: Only recommend or mention specific lesson numbers that appear in the retrieved context. Do not recall lesson numbers from training data.
+- MISSING LESSONS: If a lesson is not represented in the retrieved context, do not describe its content. You may acknowledge it exists (e.g., "Lesson 12 covers te-form") but say nothing about what it contains beyond that.
+- DISTINGUISH SOURCES: Be explicit about what the retrieved context shows versus what you are inferring versus what you cannot determine because it was not retrieved.
+- CIRCULAR RECOMMENDATIONS: Never recommend a lesson as preparation for itself. If a question asks what to review before topic X and topic X is taught in Lesson N, do not recommend Lesson N as a prerequisite.
+- UNSUPPORTED CLAIMS: If you cannot find supporting evidence in the context for a specific claim about a lesson, say "I don't have retrieved evidence for that lesson" rather than filling in from general knowledge.
+`;
+
+const GROUNDING_RULES_HE = `
+עיגון בראיות — חובה לפעול לפי כללים אלה:
+- תוכן שיעור: תאר מה מכסה שיעור מסוים רק אם קטעי השיעור מופיעים בהקשר שנשלף. אסור לתאר תוכן שיעור מידע כללי.
+- מספרי שיעור: ציין מספרי שיעור ספציפיים רק אם הם מופיעים בהקשר שנשלף. אסור להיזכר במספרי שיעור מידע אימון.
+- שיעורים חסרים: אם שיעור אינו מיוצג בהקשר שנשלף, אל תתאר את תוכנו. תוכל לציין שהוא קיים אך אל תוסיף מה הוא מכסה.
+- הבחן בין מקורות: ציין מה ההקשר מראה לעומת מה שאתה מסיק לעומת מה שאינך יכול לדעת כי לא נשלף.
+- המלצות מעגליות: אסור להמליץ על שיעור כהכנה לאותו שיעור עצמו.
+- טענות לא מגובות: אם אינך מוצא ראיות בהקשר לטענה על שיעור ספציפי, אמור "אין לי ראיות שנשלפו לשיעור זה" במקום למלא מידע כללי.
+`;
+
 const TEACHING_STYLE = `
 Teaching style — always follow:
 - Prioritize clarity over linguistic precision. Keep explanations beginner-friendly unless advanced detail is explicitly requested.
@@ -1337,7 +1359,10 @@ Rules:
 - If no evidence: state "I couldn't find evidence of this in the course index."
 - Do not invent lesson numbers.
 - For "what is covered in lesson X": list the main topics from the summary chunks provided.
-- For "review before lesson X": list the main topics from the preceding lesson summaries provided.`;
+- For "review before lesson X": list the main topics from the preceding lesson summaries provided.
+- Only list prerequisites that are represented in the retrieved context. Do not add lessons from general knowledge.
+- Never recommend a lesson as a prerequisite for itself.
+${GROUNDING_RULES}`;
   }
 
   // ── Lookup mode: only answer from retrieved context ────────────────────────
@@ -1390,7 +1415,9 @@ ${teachingRule}
    "I couldn't find this in the indexed course materials."
 
 Do NOT invent lesson numbers. Do NOT infer a lesson number from incidental or grammar-reference evidence.
-Do NOT output raw markdown tables from the retrieved text — summarise table content as a plain sentence instead.`
+Do NOT describe a lesson's content unless that lesson's chunks are present in the retrieved context above. Only summarize what the retrieved chunk actually says — do not add content from training knowledge.
+Do NOT output raw markdown tables from the retrieved text — summarise table content as a plain sentence instead.
+${GROUNDING_RULES}`
       : `- Start with a direct yes/no answer to the question.
 - Then report all locations where the topic appears — lesson, grammar reference, and incidental.
 - For each location write one plain sentence summarising what the material says.
@@ -1417,13 +1444,15 @@ IMPORTANT: Never output placeholder text such as [short quote], [excerpt], [quot
     if (language === "hebrew") {
       return `${lang}
 ${hebrewBase}
+${GROUNDING_RULES_HE}
 אתה מורה דקדוק יפני ידידותי למתחילים.
 
 חוקים:
+- להסברי דקדוק (איך חלקיקים עובדים, הטיות, תבניות משפט): הסבר מידיעתך גם אם ההקשר חלקי.
+- לתוכן שיעור ספציפי (מה שיעור X מכסה, איזה שיעור מציג נושא, מה לחזור לפני שיעור): השתמש רק בשיעורים ותוכן שיעור המופיעים בהקשר שנשלף. אסור להיזכר במבנה הקורס מידע אימון.
 - אל תפיק רשימות אוצר מילים אלא אם נשאלת במפורש.
 - ענה רק על השאלה שנשאלה.
 - אם ההקשר מספק מידע רלוונטי — השתמש בו.
-- עבור נושאי דקדוק בסיסיים — תמיד תן הסבר מלא מידיעתך, גם אם ההקשר חלקי.
 - אין לכתוב "החומר אינו כולל..." — הסבר את הנושא ישירות.
 - אל תחזור על אותו רעיון פעמיים. כל נקודה מופיעה פעם אחת בלבד.
 - אל תכתוב סוגריים ריקים, מספרים בודדים, או ארטיפקטים של PDF.
@@ -1446,11 +1475,12 @@ ${hebrewBase}
     }
     return `${lang}
 ${base}
+${GROUNDING_RULES}
 You are a beginner-friendly Japanese grammar tutor.
 
 Rules:
-- Explain clearly and accurately.
-- Use general Japanese knowledge for core grammar even if retrieved context is incomplete.
+- For GRAMMAR EXPLANATIONS (how particles work, how to conjugate, grammar patterns): explain clearly using general Japanese knowledge even if context is incomplete.
+- For LESSON-SPECIFIC CONTENT (what a particular lesson covers, which lesson introduces a topic, lesson prerequisites): only reference lessons and lesson content that appear in the retrieved context above. Do not recall course structure or lesson numbering from training data.
 - Clearly state whether the topic is a particle, verb form, sentence pattern, etc.
 - Keep it beginner-friendly — no advanced grammar unless asked.
 - NEVER write "The material does not include..." — just explain the topic.
@@ -1592,13 +1622,17 @@ If the context is incomplete, still provide a useful plan based on what is avail
   if (language === "hebrew") {
     return `${lang}
 ${hebrewBase}
+${GROUNDING_RULES_HE}
 אתה מורה יפנית ידידותי. ענה על השאלה בעברית בצורה ברורה ומועילה.
-- אם ההקשר מספק מידע — השתמש בו. אחרת, ענה מידיעתך כמורה.`;
+- להסברי דקדוק: ענה מידיעתך כמורה.
+- לשאלות על תוכן שיעור או מספרי שיעור: השתמש רק בהקשר שנשלף.`;
   }
   return `${lang}
 ${base}
+${GROUNDING_RULES}
 You are a helpful Japanese teacher. Answer the question clearly.
-Use the retrieved context when relevant. For basic Japanese topics, answer from your knowledge as a teacher.`;
+- For grammar explanations: answer from your knowledge as a teacher.
+- For lesson-specific content or lesson number recommendations: use only the retrieved context above.`;
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────

@@ -51,8 +51,16 @@ const FOLLOWUP_PATTERNS = [
   /^and\s+(why|how|what)\b/i,
   /^can\s+you\s+explain\s+(that|why|more)\b/i,
   /^(so|but)\s+why\b/i,
-  /^why\s+(not|is|are|was|were|did|do|does)\b/i,
 ];
+
+// "Why is/do/does/are/..." is ambiguous: could be a short follow-up ("Why is that?")
+// or a full standalone grammar question ("Why do we say Sushi ga suki desu?").
+// Only treat it as a follow-up if it is short enough to be a contextual question.
+const WHY_VERB_PATTERN = /^why\s+(not|is|are|was|were|did|do|does)\b/i;
+const WHY_VERB_MAX_LEN = 28;
+
+// Japanese characters anywhere in the question signal a standalone grammar question.
+const JAPANESE_CHARS = /[぀-ヿ一-鿿]/;
 
 export function isOllamaOfflineError(message: string): boolean {
   return OFFLINE_PATTERNS.some((p) => p.test(message));
@@ -60,9 +68,12 @@ export function isOllamaOfflineError(message: string): boolean {
 
 export function detectFollowUp(question: string): boolean {
   const trimmed = question.trim();
-  // Very short questions (≤ 40 chars) that match follow-up patterns
   if (trimmed.length > 120) return false;
-  return FOLLOWUP_PATTERNS.some((p) => p.test(trimmed));
+  // Questions containing Japanese text are always standalone grammar questions.
+  if (JAPANESE_CHARS.test(trimmed)) return false;
+  if (FOLLOWUP_PATTERNS.some((p) => p.test(trimmed))) return true;
+  // "Why is/do/does/are..." only counts as a follow-up when short enough to be contextual.
+  return WHY_VERB_PATTERN.test(trimmed) && trimmed.length <= WHY_VERB_MAX_LEN;
 }
 
 export function getLastEntry(): ChatLogEntry | null {
